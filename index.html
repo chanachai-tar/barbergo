@@ -1,1 +1,2619 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BarberGo - Complete On-Demand Grooming Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        barber: {
+                            base: '#0b0f17',
+                            card: '#161e2e',
+                            cardLight: '#1f293d',
+                            gold: '#d4af37',
+                            goldHover: '#b89628',
+                            goldLight: '#fef3c7',
+                            accent: '#3b82f6',
+                            danger: '#f43f5e',
+                            success: '#10b981'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Prompt', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
+    <style>.svg-inline--fa{height:1em;vertical-align:-0.125em}</style>
+    <!-- Google Fonts (Prompt & Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for Barber & Admin Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Prompt', 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0b0f17; }
+        ::-webkit-scrollbar-thumb { background: #1f293d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #d4af37; }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #fef3c7 0%, #d4af37 50%, #9a7b1c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gold-border-glow {
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-barber-base text-slate-100 min-h-screen flex flex-col selection:bg-barber-gold selection:text-slate-950">
 
+    <!-- Top Global Navigation -->
+    <header class="sticky top-0 z-50 bg-barber-base/90 backdrop-blur-md border-b border-slate-800/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchRole('customer')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-barber-gold to-amber-200 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-amber-500/20">
+                    <i class="fa-solid fa-scissors"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-extrabold tracking-wider text-white">BARBER<span class="gold-gradient-text">GO</span></span>
+                    <span class="block text-[9px] text-slate-400 tracking-widest uppercase font-semibold">On-Demand Grooming</span>
+                </div>
+            </div>
+
+            <!-- Role Simulator Switcher -->
+            <div class="hidden md:flex items-center space-x-1.5 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800/80">
+                <span class="text-[11px] font-bold text-slate-400 px-2 flex items-center gap-1">
+                    <i class="fa-solid fa-sliders text-barber-gold"></i> Role Mode:
+                </span>
+                <button onclick="switchRole('customer')" id="role-btn-customer" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 bg-barber-gold text-slate-950 shadow">
+                    <i class="fa-solid fa-user mr-1"></i> ลูกค้า (Customer)
+                </button>
+                <button onclick="switchRole('barber')" id="role-btn-barber" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-all duration-200">
+                    <i class="fa-solid fa-scissors mr-1"></i> ช่างตัดผม (Barber)
+                </button>
+                <button onclick="switchRole('admin')" id="role-btn-admin" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-all duration-200">
+                    <i class="fa-solid fa-shield-halved mr-1"></i> แอดมิน (Admin)
+                </button>
+            </div>
+
+            <!-- User Auth & Points Header Badge -->
+            <div class="flex items-center space-x-3">
+                <!-- Loyalty Points Badge for Customer -->
+                <div id="header-points-badge" class="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-xl">
+                    <i class="fa-solid fa-coins text-barber-gold text-xs"></i>
+                    <span class="text-xs font-bold text-barber-gold" id="user-points-display">120 แต้ม</span>
+                </div>
+
+                <div id="user-avatar-badge" class="flex items-center gap-2 cursor-pointer" onclick="openAuthModal()">
+                    <img id="user-avatar-img" src="" class="w-9 h-9 rounded-xl object-cover border border-barber-gold/50">
+                    <div class="hidden sm:block text-left">
+                        <span id="user-name-display" class="block text-xs font-bold text-white">คุณณัฐวุฒิ (ลูกค้า)</span>
+                        <span id="user-role-display" class="block text-[10px] text-emerald-400 font-medium">ยืนยันตัวตนแล้ว</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Role Switcher Bar -->
+        <div class="md:hidden flex items-center justify-around bg-slate-950 px-2 py-2 border-t border-slate-800/60 text-xs">
+            <button onclick="switchRole('customer')" id="m-role-btn-customer" class="text-barber-gold font-bold">ลูกค้า</button>
+            <span class="text-slate-700">|</span>
+            <button onclick="switchRole('barber')" id="m-role-btn-barber" class="text-slate-400">ช่างตัดผม</button>
+            <span class="text-slate-700">|</span>
+            <button onclick="switchRole('admin')" id="m-role-btn-admin" class="text-slate-400">แอดมิน</button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ================================================================= -->
+        <!-- 1. CUSTOMER PORTAL VIEW                                           -->
+        <!-- ================================================================= -->
+        <div id="view-customer" class="space-y-8">
+
+            <!-- Hero Section -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border border-slate-800 p-6 sm:p-10 shadow-2xl gold-border-glow">
+                <div class="relative z-10 max-w-2xl space-y-4">
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-barber-gold border border-amber-500/20">
+                        <i class="fa-solid fa-certificate"></i> อันดับ 1 บริการตัดผมเดลิเวอรี & จองคิวนัดหมาย
+                    </span>
+                    <h1 class="text-2xl sm:text-4xl font-black text-white leading-tight">
+                        หล่อ เนี๊ยบ ตรงเวลา <br><span class="gold-gradient-text">กับช่างตัดผมระดับมาสเตอร์</span>
+                    </h1>
+                    <p class="text-slate-400 text-xs sm:text-sm leading-relaxed">
+                        เลือกรับบริการได้ทั้งแบบ <strong class="text-white">จองคิวไปที่ร้าน</strong> หรือ <strong class="text-white">เรียกช่างไปตัดถึงบ้าน/คอนโด</strong> พร้อมระบบการันตีคุณภาพ งานตรงปก ไม่มีคิวหลุด
+                    </p>
+                    <div class="flex flex-wrap gap-3 pt-2">
+                        <button onclick="setFilterMode('all')" class="px-5 py-2.5 rounded-xl bg-barber-gold hover:bg-barber-goldHover text-slate-950 font-bold text-xs sm:text-sm transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2">
+                            <i class="fa-solid fa-magnifying-glass"></i> ค้นหาช่างตัดผม
+                        </button>
+                        <button onclick="scrollToCustomerTracking()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs sm:text-sm transition-all border border-slate-700 flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left text-barber-gold"></i> ตรวจสอบสถานะคิว
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Search, Filter & Service Mode Section -->
+            <div class="bg-barber-card border border-slate-800/80 rounded-2xl p-5 shadow-xl space-y-4">
+                <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <!-- Search Input -->
+                    <div class="relative w-full md:w-80">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                        <input type="text" id="search-barber-input" onkeyup="filterBarbers()" placeholder="ค้นหาชื่อช่าง, ทรงผมที่ถนัด, หรือสถานที่..." class="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-barber-gold">
+                    </div>
+
+                    <!-- Filter Mode Tabs -->
+                    <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                        <button onclick="setFilterMode('all')" id="filter-btn-all" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-barber-gold text-slate-950">
+                            ทั้งหมด
+                        </button>
+                        <button onclick="setFilterMode('onsite')" id="filter-btn-onsite" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 hover:text-white border border-slate-800">
+                            <i class="fa-solid fa-store mr-1 text-barber-gold"></i> มีหน้าร้าน
+                        </button>
+                        <button onclick="setFilterMode('home')" id="filter-btn-home" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 hover:text-white border border-slate-800">
+                            <i class="fa-solid fa-house mr-1 text-barber-gold"></i> บริการถึงบ้าน
+                        </button>
+                        <select id="filter-style-select" onchange="filterBarbers()" class="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-barber-gold">
+                            <option value="">-- ทรงผมที่ถนัด --</option>
+                            <option value="Fade">Skin Fade / วินเทจ</option>
+                            <option value="Two Block">Two Block / เกาหลี</option>
+                            <option value="Mullet">Mullet / แฟชั่น</option>
+                            <option value="Beard">โกนหนวด / ดูแลเครา</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Barbers List Grid -->
+            <div class="space-y-4">
+                <h2 class="text-xl font-bold text-white flex items-center justify-between">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-users text-barber-gold"></i> ช่างตัดผมแนะนำย่านคุณ</span>
+                    <span class="text-xs text-slate-400 font-normal">พบ <span id="barber-count-text" class="text-barber-gold font-bold">3</span> ท่านพร้อมรับงาน</span>
+                </h2>
+                <div id="customer-barbers-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dynamic Barber Cards Injected by JS -->
+                </div>
+            </div>
+
+            <!-- Interactive Booking Workflow Drawer Modal / Anchor -->
+            <div id="booking-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden overflow-y-auto">
+                <div class="bg-barber-card border border-slate-800 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 space-y-6 shadow-2xl relative">
+                    <!-- Modal Close -->
+                    <button onclick="closeBookingModal()" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-900 border border-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+
+                    <div class="border-b border-slate-800 pb-4">
+                        <span class="text-xs font-bold text-barber-gold uppercase tracking-wider">BOOKING ENGINE</span>
+                        <h3 class="text-2xl font-bold text-white flex items-center gap-2">
+                            จองคิวนัดหมาย <span id="modal-barber-name" class="text-amber-300"></span>
+                        </h3>
+                        <button onclick="openPortfolioModal(currentSelectedBarber.id)" class="mt-2 text-xs text-barber-gold hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-images"></i> ดูผลงาน ประสบการณ์ และอุปกรณ์ของช่าง
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Left 2 Columns: Configs -->
+                        <div class="lg:col-span-2 space-y-6">
+                            
+                            <!-- 1. Service Type Choice -->
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">1. เลือกรูปแบบบริการ</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button type="button" onclick="selectBookingType('onsite')" id="btype-onsite" class="p-3.5 rounded-2xl border border-barber-gold bg-amber-500/10 text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-store text-barber-gold"></i> ไปใช้บริการที่ร้าน
+                                    </button>
+                                    <button type="button" onclick="selectBookingType('home')" id="btype-home" class="p-3.5 rounded-2xl border border-slate-800 bg-slate-900 text-slate-400 font-medium text-xs sm:text-sm flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-house text-barber-gold"></i> ตัดถึงบ้าน (+ค่าเดินทาง)
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Address Input (Home Service) -->
+                            <div id="booking-address-box" class="space-y-2 hidden">
+                                <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">ที่อยู่สำหรับการเดินทางไปตัด</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-location-dot absolute left-3.5 top-3.5 text-barber-gold text-sm"></i>
+                                    <input type="text" id="booking-address-input" placeholder="ระบุเลขที่บ้าน, คอนโด, ซอย, จุดสังเกต..." class="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-barber-gold">
+                                </div>
+                                <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 space-y-3 text-xs">
+                                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                                        <span class="font-bold text-white"><i class="fa-solid fa-route text-barber-gold mr-1"></i> ค่าเดินทางช่าง</span>
+                                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">ประมาณการ • ยืนยันยอดจริงเมื่อช่างรับงาน</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-slate-400 shrink-0">ระยะทาง</label>
+                                        <input type="number" id="booking-distance-input" min="0" step="0.1" oninput="updateCartSummary()" class="w-20 px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white text-center focus:outline-none focus:border-barber-gold">
+                                        <span class="text-slate-400">กม.</span>
+                                        <button type="button" onclick="useGpsDistance()" class="ml-auto px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white hover:border-barber-gold">
+                                            <i class="fa-solid fa-location-crosshairs text-barber-gold mr-1"></i> ใช้ GPS
+                                        </button>
+                                    </div>
+                                    <p id="booking-travel-breakdown" class="text-slate-400 leading-relaxed"></p>
+                                </div>
+                            </div>
+
+                            <!-- 2. Select Services -->
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">2. เลือกรายการบริการ (เลือกได้มากกว่า 1)</label>
+                                <div id="modal-services-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                                    <!-- Injected Services -->
+                                </div>
+                            </div>
+
+                            <!-- 3. Date & Time Slots -->
+                            <div class="space-y-3">
+                                <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">3. วันที่และรอบเวลาว่าง</label>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <input type="date" id="booking-date-picker" onchange="generateTimeSlots()" class="px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-barber-gold">
+                                    <select id="booking-time-select" class="px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-barber-gold">
+                                        <!-- Time slots populated dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- 4. Payment Method -->
+                            <div class="space-y-3">
+                                <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">4. ช่องทางการชำระเงิน</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button onclick="setPaymentMethod('promptpay')" id="pay-promptpay" class="p-2.5 rounded-xl border border-barber-gold bg-amber-500/10 text-white text-xs font-medium text-center">
+                                        <i class="fa-solid fa-qrcode text-barber-gold block text-sm mb-1"></i> PromptPay QR
+                                    </button>
+                                    <button onclick="setPaymentMethod('card')" id="pay-card" class="p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 text-xs font-medium text-center">
+                                        <i class="fa-solid fa-credit-card block text-sm mb-1"></i> บัตรเครดิต
+                                    </button>
+                                    <button onclick="setPaymentMethod('cash')" id="pay-cash" class="p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 text-xs font-medium text-center">
+                                        <i class="fa-solid fa-money-bill-wave block text-sm mb-1"></i> เงินสดหน้าร้าน
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Right Column: Summary Cart & Checkout -->
+                        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                            <div class="space-y-4">
+                                <h4 class="font-bold text-white text-sm border-b border-slate-800 pb-2 flex justify-between">
+                                    <span>สรุปยอดชำระ</span>
+                                    <span class="text-emerald-400 text-xs"><i class="fa-solid fa-shield-halved"></i> คุ้มครอง No-Show</span>
+                                </h4>
+
+                                <div id="cart-items-list" class="space-y-2 text-xs text-slate-300 min-h-[80px]">
+                                    <p class="text-slate-500 italic">กรุณาเลือกบริการอย่างน้อย 1 รายการ...</p>
+                                </div>
+
+                                <div class="space-y-1.5 pt-3 border-t border-slate-800 text-xs">
+                                    <div class="flex justify-between text-slate-400">
+                                        <span>ค่าบริการรวม:</span>
+                                        <span id="cart-subtotal" class="text-white">฿0</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-400">
+                                        <span>ค่าเดินทาง <span id="cart-travel-tag" class="text-[10px] text-amber-400"></span>:</span>
+                                        <span id="cart-delivery-fee" class="text-white">฿0</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-400 text-amber-400" id="cart-points-earned-row">
+                                        <span>แต้มที่จะได้รับ:</span>
+                                        <span id="cart-points-earned" class="font-bold">+0 แต้ม</span>
+                                    </div>
+                                    <div class="flex justify-between text-base font-extrabold text-white pt-2 border-t border-slate-800">
+                                        <span>ราคาสุทธิ:</span>
+                                        <span id="cart-grand-total" class="gold-gradient-text">฿0</span>
+                                    </div>
+                                </div>
+
+                                <p id="cart-cancel-policy" class="text-[10px] text-slate-500 leading-relaxed"></p>
+
+                                <!-- PromptPay Dynamic Simulated QR -->
+                                <div id="promptpay-qr-box" class="bg-white p-3 rounded-xl text-center text-slate-950 space-y-1">
+                                    <span class="text-[10px] font-bold tracking-wider text-slate-700 block">สแกนจ่ายผ่าน PROMPTPAY</span>
+                                    <img id="promptpay-qr-img" src="" class="w-28 h-28 mx-auto border rounded">
+                                    <span class="text-[9px] text-slate-500 block">ระบบจำลองการจ่ายเงินเรียลไทม์</span>
+                                </div>
+                            </div>
+
+                            <button onclick="confirmBookingSubmit()" id="btn-confirm-checkout" disabled class="w-full py-3 rounded-xl bg-barber-gold hover:bg-barber-goldHover text-slate-950 font-bold text-xs sm:text-sm transition-all shadow-lg shadow-amber-500/20 opacity-50 cursor-not-allowed">
+                                <i class="fa-solid fa-lock mr-1"></i> ยืนยันการจองและชำระเงิน
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Tracking & Review Section -->
+            <div id="customer-tracking-section" class="space-y-4">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-barber-gold"></i> ติดตามสถานะงานจองของคุณ
+                </h2>
+                <div id="customer-orders-container" class="space-y-4">
+                    <!-- Dynamic Orders Cards Injected by JS -->
+                </div>
+            </div>
+
+            <!-- Anti-Bypassing Benefits Banner -->
+            <div class="bg-gradient-to-r from-amber-500/10 via-slate-900 to-amber-500/10 border border-amber-500/30 rounded-2xl p-5 text-xs text-slate-300 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-barber-gold/20 flex items-center justify-center text-barber-gold text-lg shrink-0">
+                        <i class="fa-solid fa-shield-cat"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-white text-sm">เหตุผลที่ควรจองผ่านระบบ BARBERGO</h4>
+                        <p class="text-slate-400">คุ้มครองทุกการจองด้วยประกัน No-Show, ได้รับแต้มสะสมแลกตัดฟรี และรับประกันความพึงพอใจทรงผม 100%</p>
+                    </div>
+                </div>
+                <span class="px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-barber-gold font-bold shrink-0">
+                    <i class="fa-solid fa-gem mr-1"></i> สิทธิพิเศษสมาชิก
+                </span>
+            </div>
+
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- 2. BARBER DASHBOARD VIEW                                          -->
+        <!-- ================================================================= -->
+        <div id="view-barber" class="space-y-8 hidden">
+
+            <!-- Barber Header Stats Card -->
+            <div class="bg-barber-card border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+                    <div class="flex items-center space-x-4">
+                        <img id="barber-profile-avatar" src="" class="w-16 h-16 rounded-2xl object-cover border-2 border-barber-gold shadow-lg">
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h1 id="barber-profile-name" class="text-2xl font-black text-white">ช่างเดี่ยว สุภาพ (Master Barber)</h1>
+                                <span id="barber-kyc-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                                    <i class="fa-solid fa-check-double"></i> KYC อนุมัติแล้ว
+                                </span>
+                            </div>
+                            <p id="barber-profile-sub" class="text-slate-400 text-xs mt-1">เชี่ยวชาญ Skin Fade, Vintage Crop • ประสบการณ์ 8 ปี</p>
+                        </div>
+                    </div>
+
+                    <!-- Online Switch Status -->
+                    <div class="flex items-center gap-3 bg-slate-900 px-4 py-2 rounded-2xl border border-slate-800">
+                        <span class="text-xs text-slate-300 font-medium">สถานะรับงาน:</span>
+                        <button onclick="toggleBarberOnline()" id="barber-online-btn" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition-all">
+                            <i class="fa-solid fa-signal mr-1"></i> พร้อมรับงาน (Online)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Earnings Stats Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800/80">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">รายได้รวมเดือนนี้</span>
+                        <span class="text-xl font-black gold-gradient-text" id="barber-stat-earnings">฿18,450</span>
+                        <span class="text-[10px] text-slate-500 block mt-0.5">หักคอมมิชชัน 10% แล้ว</span>
+                    </div>
+                    <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800/80">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">งานเสร็จสิ้นแล้ว</span>
+                        <span class="text-xl font-black text-white" id="barber-stat-jobs">32 คิว</span>
+                    </div>
+                    <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800/80">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">คะแนนรีวิวเฉลี่ย</span>
+                        <span class="text-xl font-black text-amber-400 flex items-center gap-1">
+                            <i class="fa-solid fa-star text-sm"></i> 4.9 <span class="text-xs text-slate-500 font-normal">(128)</span>
+                        </span>
+                    </div>
+                    <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800/80">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">โบนัสขยัน (Anti-Bypass)</span>
+                        <span class="text-xl font-black text-emerald-400">+฿1,200</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Barber Workspace Tabs -->
+            <div class="flex border-b border-slate-800 gap-4 text-sm font-bold overflow-x-auto no-scrollbar whitespace-nowrap">
+                <button onclick="switchBarberTab('jobs')" id="btab-jobs" class="pb-3 border-b-2 border-barber-gold text-barber-gold flex items-center gap-2">
+                    <i class="fa-solid fa-list-check"></i> คิวงานประจำวัน
+                </button>
+                <button onclick="switchBarberTab('portfolio')" id="btab-portfolio" class="pb-3 text-slate-400 hover:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-images"></i> โปรไฟล์ & ผลงาน
+                </button>
+                <button onclick="switchBarberTab('services')" id="btab-services" class="pb-3 text-slate-400 hover:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i> จัดการบริการ & ราคา
+                </button>
+                <button onclick="switchBarberTab('kyc')" id="btab-kyc" class="pb-3 text-slate-400 hover:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-id-card"></i> เอกสาร KYC ยืนยันตัวตน
+                </button>
+            </div>
+
+            <!-- Tab 1: Barber Jobs Management -->
+            <div id="barber-sec-jobs" class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-white">รายการคิวลูกค้าจองเข้ามา</h2>
+                    <span class="text-xs text-slate-400">อัปเดตแบบเรียลไทม์</span>
+                </div>
+                <div id="barber-jobs-list" class="space-y-4">
+                    <!-- Dynamic Barber Jobs List -->
+                </div>
+            </div>
+
+            <!-- Tab: Barber Profile, Experience, Equipment & Portfolio -->
+            <div id="barber-sec-portfolio" class="space-y-6 hidden">
+
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <div>
+                        <h2 class="text-lg font-bold text-white">โปรไฟล์ & ผลงานของคุณ</h2>
+                        <p class="text-xs text-slate-400">ข้อมูลส่วนนี้จะแสดงให้ลูกค้าเห็นก่อนกดจองคิว — โปรไฟล์ที่ครบช่วยให้ได้งานมากขึ้น</p>
+                    </div>
+                    <button onclick="openPortfolioModal(barbersData[0].id)" class="px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-semibold hover:border-barber-gold">
+                        <i class="fa-solid fa-eye text-barber-gold mr-1"></i> ดูตัวอย่างหน้าที่ลูกค้าเห็น
+                    </button>
+                </div>
+
+                <!-- Profile completeness -->
+                <div class="bg-barber-card border border-slate-800 rounded-2xl p-4 space-y-2">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-300 font-semibold">ความสมบูรณ์ของโปรไฟล์</span>
+                        <span id="pf-complete-text" class="text-barber-gold font-bold">0%</span>
+                    </div>
+                    <div class="h-2 bg-slate-900 rounded-full overflow-hidden">
+                        <div id="pf-complete-bar" class="h-full bg-gradient-to-r from-amber-600 to-barber-gold transition-all" style="width:0%"></div>
+                    </div>
+                    <p id="pf-complete-hint" class="text-[11px] text-slate-500"></p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Profile Photo -->
+                    <div class="bg-barber-card border border-slate-800 rounded-2xl p-6 space-y-4 text-center">
+                        <h3 class="font-bold text-white text-base text-left">รูปโปรไฟล์ช่าง</h3>
+                        <img id="pf-avatar-preview" src="" class="w-32 h-32 rounded-3xl object-cover mx-auto border-2 border-barber-gold shadow-lg">
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <label class="cursor-pointer px-3 py-2.5 rounded-xl bg-barber-gold hover:bg-barber-goldHover text-slate-950 font-bold transition-all">
+                                <i class="fa-solid fa-camera mr-1"></i> ถ่ายรูป
+                                <input type="file" accept="image/*" capture="user" class="hidden" onchange="handleAvatarUpload(event)">
+                            </label>
+                            <label class="cursor-pointer px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold hover:border-barber-gold transition-all">
+                                <i class="fa-solid fa-image mr-1 text-barber-gold"></i> เลือกรูป
+                                <input type="file" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)">
+                            </label>
+                        </div>
+                        <p class="text-[10px] text-slate-500">แนะนำรูปหน้าตรง แสงสว่าง เห็นใบหน้าชัดเจน</p>
+                    </div>
+
+                    <!-- Experience Details -->
+                    <div class="lg:col-span-2 bg-barber-card border border-slate-800 rounded-2xl p-6 space-y-4">
+                        <h3 class="font-bold text-white text-base">รายละเอียดประสบการณ์</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                            <div class="sm:col-span-2">
+                                <label class="block text-slate-300 font-semibold mb-1">ชื่อที่แสดงให้ลูกค้าเห็น</label>
+                                <input type="text" id="pf-name" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-barber-gold">
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-semibold mb-1">ประสบการณ์ (ปี)</label>
+                                <input type="number" min="0" id="pf-years" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-barber-gold">
+                            </div>
+                            <div class="sm:col-span-3">
+                                <label class="block text-slate-300 font-semibold mb-1">ความเชี่ยวชาญ (แสดงใต้ชื่อ)</label>
+                                <input type="text" id="pf-specialty" placeholder="เช่น Skin Fade & Vintage Specialist" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-barber-gold">
+                            </div>
+                            <div class="sm:col-span-3">
+                                <label class="block text-slate-300 font-semibold mb-1">แนะนำตัว / แนวทางการทำงาน</label>
+                                <textarea id="pf-bio" rows="3" placeholder="เล่าประสบการณ์ ทรงที่ถนัด จุดเด่นในการบริการ..." class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-barber-gold"></textarea>
+                            </div>
+                        </div>
+                        <button onclick="saveBarberProfile()" class="px-5 py-2.5 bg-barber-gold hover:bg-barber-goldHover text-slate-950 font-bold text-xs rounded-xl transition-all">
+                            <i class="fa-solid fa-floppy-disk mr-1"></i> บันทึกข้อมูลโปรไฟล์
+                        </button>
+
+                        <!-- Work history -->
+                        <div class="pt-4 border-t border-slate-800 space-y-3">
+                            <h4 class="font-bold text-white text-sm">ประวัติการทำงาน / ร้านที่เคยตัด / ใบรับรอง</h4>
+                            <div id="pf-history-list" class="space-y-2"></div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                                <input type="text" id="pf-hist-place" placeholder="ร้าน / สถาบัน" class="px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-barber-gold">
+                                <input type="text" id="pf-hist-period" placeholder="ช่วงเวลา เช่น 2019 - 2022" class="px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-barber-gold">
+                                <input type="text" id="pf-hist-desc" placeholder="รายละเอียดงาน" class="px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-barber-gold">
+                            </div>
+                            <button onclick="addExperienceHistory()" class="px-4 py-2 bg-slate-800 border border-slate-700 hover:border-barber-gold text-white font-semibold text-xs rounded-xl">
+                                <i class="fa-solid fa-plus mr-1 text-barber-gold"></i> เพิ่มประวัติ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Equipment -->
+                <div class="bg-barber-card border border-slate-800 rounded-2xl p-6 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-white text-base"><i class="fa-solid fa-toolbox text-barber-gold mr-1"></i> อุปกรณ์ที่มี</h3>
+                        <span id="pf-equip-count" class="text-xs text-slate-400"></span>
+                    </div>
+                    <div id="pf-equip-list" class="flex flex-wrap gap-2"></div>
+                    <div class="space-y-2">
+                        <span class="text-[11px] text-slate-500 block">เพิ่มด่วน:</span>
+                        <div id="pf-equip-presets" class="flex flex-wrap gap-1.5"></div>
+                    </div>
+                    <div class="flex gap-2 text-xs">
+                        <input type="text" id="pf-equip-input" onkeydown="if(event.key==='Enter'){addEquipmentFromInput()}" placeholder="ระบุอุปกรณ์ เช่น ปัตตาเลี่ยน Wahl Magic Clip" class="flex-1 px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-barber-gold">
+                        <button onclick="addEquipmentFromInput()" class="px-4 py-2.5 bg-barber-gold hover:bg-barber-goldHover text-slate-950 font-bold rounded-xl">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Portfolio Gallery -->
+                <div class="bg-barber-card border border-slate-800 rounded-2xl p-6 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-white text-base"><i class="fa-solid fa-images text-barber-gold mr-1"></i> ภาพผลงานที่เคยตัด</h3>
+                        <span id="pf-gallery-count" class="text-xs text-slate-400"></span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                        <input type="text" id="pf-work-caption" placeholder="คำอธิบาย เช่น Low Fade + เท็กซ์เจอร์ด้านบน" class="sm:col-span-2 px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-barber-gold">
+                        <select id="pf-work-style" class="px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-300 focus:outline-none focus:border-barber-gold">
+                            <option value="Fade">Skin Fade / วินเทจ</option>
+                            <option value="Two Block">Two Block / เกาหลี</option>
+                            <option value="Mullet">Mullet / แฟชั่น</option>
+                            <option value="Beard">โกนหนวด / ดูแลเครา</option>
+                            <option value="Other">อื่น ๆ</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <label class="cursor-pointer border-2 border-dashed border-slate-700 hover:border-barber-gold p-5 rounded-2xl text-center bg-slate-900/50 transition-all">
+                            <i class="fa-solid fa-camera text-2xl text-barber-gold block mb-1"></i>
+                            <span class="text-slate-300 font-semibold">ถ่ายรูปผลงาน</span>
+                            <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handlePortfolioUpload(event)">
+                        </label>
+                        <label class="cursor-pointer border-2 border-dashed border-slate-700 hover:border-barber-gold p-5 rounded-2xl text-center bg-slate-900/50 transition-all">
+                            <i class="fa-solid fa-cloud-arrow-up text-2xl text-barber-gold block mb-1"></i>
+                            <span class="text-slate-300 font-semibold">อัปโหลดหลายรูป</span>
+                            <input type="file" accept="image/*" multiple class="hidden" onchange="handlePortfolioUpload(event)">
+                        </label>
+                    </div>
+                    <p class="text-[10px] text-slate-500">ใส่คำอธิบายและเลือกสไตล์ก่อน แล้วค่อยถ่าย/อัปโหลด • ควรขออนุญาตลูกค้าก่อนโพสต์รูปที่เห็นใบหน้า</p>
+
+                    <div id="pf-gallery-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Barber Services & Pricing Manager -->
+            <div id="barber-sec-services" class="space-y-6 hidden">
+                <div class="bg-barber-card border border-slate-800 rounded-2xl p-6 space-y-4">
+                    <h3 class="font-bold text-white text-base">เพิ่มเมนูบริการใหม่ของคุณ</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <input type="text" id="new-service-name" placeholder="ชื่อบริการ เช่น สระเซ็ตวินเทจ" class="px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white">
+                        <input type="number" id="new-service-price" placeholder="ราคา (บาท)" class="px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white">
+                        <button onclick="addCustomBarberService()" class="px-4 py-2.5 bg-barber-gold hover:bg-barber-goldHover text-slate-950 font-bold text-xs rounded-xl transition-all">
+                            <i class="fa-solid fa-plus mr-1"></i> เพิ่มบริการ
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <h3 class="font-bold text-white text-base">รายการบริการปัจจุบันของคุณ</h3>
+                    <div id="barber-services-manager-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Dynamic Editable Services -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Barber KYC Verification Form -->
+            <div id="barber-sec-kyc" class="space-y-6 hidden">
+                <div class="bg-barber-card border border-slate-800 rounded-2xl p-6 space-y-6 max-w-2xl">
+                    <h3 class="font-bold text-white text-lg border-b border-slate-800 pb-3">อัปโหลดเอกสารยืนยันตัวตนช่าง (KYC)</h3>
+                    <div class="space-y-4 text-xs">
+                        <div>
+                            <label class="block text-slate-300 font-semibold mb-1">เลขบัตรประชาชน / เลขผู้เสียภาษี</label>
+                            <input type="text" value="1-1002-99834-12-1" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white">
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 font-semibold mb-1">รูปถ่ายหน้าตรงถือบัตรประชาชน</label>
+                            <div class="border-2 border-dashed border-slate-700 p-6 rounded-2xl text-center space-y-2 bg-slate-900/50">
+                                <i class="fa-solid fa-cloud-arrow-up text-2xl text-barber-gold"></i>
+                                <span class="block text-slate-400">คลิกเพื่ออัปโหลดไฟล์รูปภาพ (JPG, PNG)</span>
+                                <span class="text-[10px] text-slate-500">เอกสารนี้ใช้สำหรับทีมงานแอดมินตรวจสอบเพื่อความปลอดภัยของลูกค้า</span>
+                            </div>
+                        </div>
+                        <button onclick="submitKYCForm()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all shadow">
+                            ส่งเอกสารขออนุมัติ KYC
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- 3. ADMIN DASHBOARD VIEW                                           -->
+        <!-- ================================================================= -->
+        <div id="view-admin" class="space-y-8 hidden">
+
+            <div class="bg-barber-card border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <div>
+                        <h1 class="text-2xl font-black text-white flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-barber-gold"></i> แผงควบคุมระบบ (Admin Control Center)
+                        </h1>
+                        <p class="text-xs text-slate-400 mt-1">จัดการอนุมัติช่าง, ตั้งค่าคอมมิชชัน และตรวจสอบภาพรวมแพลตฟอร์ม</p>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-barber-gold border border-amber-500/30">
+                        System Version 2.7
+                    </span>
+                </div>
+
+                <!-- Admin Analytics Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">รายได้หมุนเวียนรวม</span>
+                        <span class="text-xl font-black gold-gradient-text">฿142,500</span>
+                    </div>
+                    <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">ค่าคอมมิชชันที่เก็บได้ (10%)</span>
+                        <span class="text-xl font-black text-emerald-400">฿14,250</span>
+                    </div>
+                    <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">จำนวนช่างในระบบ</span>
+                        <span class="text-xl font-black text-white" id="admin-barbers-count-stat">3 ท่าน</span>
+                    </div>
+                    <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">อัตราป้องกันคิวหลุด</span>
+                        <span class="text-xl font-black text-amber-400">98.4%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Commission & Business Model Setting Bar -->
+            <div class="bg-barber-card border border-slate-800 rounded-2xl p-6 space-y-4">
+                <h3 class="font-bold text-white text-base">ตั้งค่าโมเดลรายได้แพลตฟอร์ม (Platform Revenue Settings)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <span class="font-bold text-slate-300 block">อัตราค่าคอมมิชชัน (% Commission)</span>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="admin-commission-rate" value="10" class="w-20 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white font-bold text-center">
+                            <span class="text-slate-400">% ต่อการจอง</span>
+                            <button onclick="saveAdminCommission()" class="ml-auto px-3 py-1.5 bg-barber-gold text-slate-950 font-bold rounded-lg">บันทึก</button>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <span class="font-bold text-slate-300 block">ค่าสมัครสมาชิกช่าง (Subscription)</span>
+                        <span class="text-slate-400 block">฿499 / เดือน (สำหรับช่างตัดมากกว่า 50 คิว)</span>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <span class="font-bold text-slate-300 block">ระบบสะสมแต้มส่วนลด</span>
+                        <span class="text-emerald-400 font-semibold block">เปิดใช้งาน (100 บาท = 10 แต้ม)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Travel Fee Settings -->
+            <div class="bg-barber-card border border-slate-800 rounded-2xl p-6 space-y-4">
+                <div>
+                    <h3 class="font-bold text-white text-base"><i class="fa-solid fa-route text-barber-gold mr-1"></i> ตั้งค่าคำนวณค่าเดินทางอัตโนมัติ (บริการถึงบ้าน)</h3>
+                    <p class="text-xs text-slate-400 mt-1">ใช้คำนวณประมาณการตอนลูกค้าจอง และเป็นค่าเริ่มต้นตอนช่างกดรับงาน</p>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                    <label class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1"><span class="text-slate-400 block">ค่าเริ่มต้น (฿)</span><input type="number" id="admin-travel-base" class="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white font-bold"></label>
+                    <label class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1"><span class="text-slate-400 block">รวมระยะแรก (กม.)</span><input type="number" step="0.5" id="admin-travel-basekm" class="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white font-bold"></label>
+                    <label class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1"><span class="text-slate-400 block">กม. ถัดไป (฿/กม.)</span><input type="number" id="admin-travel-perkm" class="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white font-bold"></label>
+                    <label class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1"><span class="text-slate-400 block">เพดานค่าเดินทาง (฿)</span><input type="number" id="admin-travel-cap" class="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white font-bold"></label>
+                    <label class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1"><span class="text-slate-400 block">ยอดแคปเกินค่าคำนวณได้ (%)</span><input type="number" id="admin-travel-tolerance" class="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white font-bold"></label>
+                    <label class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex items-center gap-2 cursor-pointer"><input type="checkbox" id="admin-travel-roundtrip" class="w-4 h-4 accent-amber-500"><span class="text-slate-300 font-semibold">คิดไป-กลับ (×2)</span></label>
+                </div>
+                <div class="flex items-center gap-3 flex-wrap">
+                    <button onclick="saveTravelSettings()" class="px-4 py-2 bg-barber-gold hover:bg-barber-goldHover text-slate-950 font-bold text-xs rounded-xl">บันทึกการตั้งค่า</button>
+                    <span id="admin-travel-example" class="text-xs text-slate-400"></span>
+                </div>
+            </div>
+
+            <!-- Cancellation Policy Settings -->
+            <div class="bg-barber-card border border-slate-800 rounded-2xl p-6 space-y-4">
+                <div>
+                    <h3 class="font-bold text-white text-base"><i class="fa-solid fa-ban text-barber-gold mr-1"></i> นโยบายยกเลิกกะทันหัน</h3>
+                    <p class="text-xs text-slate-400 mt-1">เมื่อช่างรับงานแล้ว และลูกค้ายกเลิกในช่วงก่อนเวลานัด ระบบจะหักค่าเดินทาง + ค่ายกเลิก แล้วจ่ายให้ช่าง ส่วนที่เหลือคืนลูกค้าอัตโนมัติ</p>
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-xs max-w-md">
+                    <label class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1"><span class="text-slate-400 block">ถือว่ากะทันหันเมื่อเหลือ (ชม.)</span><input type="number" min="0" step="0.5" id="admin-cancel-window" class="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white font-bold"></label>
+                    <label class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-1"><span class="text-slate-400 block">ค่ายกเลิก (% ของค่าบริการ)</span><input type="number" min="0" max="100" id="admin-cancel-pct" class="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white font-bold"></label>
+                </div>
+                <button onclick="saveCancelSettings()" class="px-4 py-2 bg-barber-gold hover:bg-barber-goldHover text-slate-950 font-bold text-xs rounded-xl">บันทึกนโยบาย</button>
+            </div>
+
+            <!-- Barber KYC Approvals Section -->
+            <div class="space-y-4">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-user-check text-barber-gold"></i> ตรวจสอบการอนุมัติช่างตัดผม (Barber KYC Approvals)
+                </h2>
+                <div id="admin-kyc-list" class="space-y-3">
+                    <!-- Dynamic KYC List -->
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Barber Portfolio Modal (Customer-facing profile) -->
+    <div id="portfolio-modal" class="fixed inset-0 z-[60] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="bg-barber-card border border-slate-800 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
+            <button onclick="closePortfolioModal()" class="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-slate-900/90 border border-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-sm">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div id="portfolio-modal-content"></div>
+        </div>
+    </div>
+
+    <!-- Travel Fee Confirmation Modal (Barber, on accepting a home job) -->
+    <div id="travel-modal" class="fixed inset-0 z-[60] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="bg-barber-card border border-slate-800 rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 shadow-2xl relative">
+            <button onclick="closeTravelModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-900 border border-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-sm">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="space-y-1 pr-8">
+                <span class="text-xs font-bold text-barber-gold uppercase tracking-wider">TRAVEL FEE</span>
+                <h3 class="text-xl font-bold text-white">ยืนยันค่าเดินทางก่อนรับงาน</h3>
+                <div id="travel-modal-order" class="text-xs text-slate-400 space-y-0.5"></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800 text-xs">
+                <button onclick="setTravelMethod('auto')" id="travel-tab-auto" class="py-2.5 rounded-xl font-bold"><i class="fa-solid fa-calculator mr-1"></i> คำนวณอัตโนมัติ</button>
+                <button onclick="setTravelMethod('grab')" id="travel-tab-grab" class="py-2.5 rounded-xl font-bold"><i class="fa-solid fa-mobile-screen mr-1"></i> แคปจากแอป Grab</button>
+            </div>
+
+            <!-- Auto calc -->
+            <div id="travel-sec-auto" class="space-y-3 text-xs">
+                <div class="flex items-center gap-2">
+                    <label class="text-slate-300 font-semibold">ระยะทางจริงตามแผนที่</label>
+                    <input type="number" id="travel-auto-km" min="0" step="0.1" oninput="updateTravelSummary()" class="w-20 ml-auto px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-center focus:outline-none focus:border-barber-gold">
+                    <span class="text-slate-400">กม.</span>
+                </div>
+                <p id="travel-auto-breakdown" class="text-slate-400 bg-slate-900/70 border border-slate-800 rounded-xl p-3 leading-relaxed"></p>
+            </div>
+
+            <!-- Grab screenshot -->
+            <div id="travel-sec-grab" class="space-y-3 text-xs hidden">
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="cursor-pointer border-2 border-dashed border-slate-700 hover:border-barber-gold p-4 rounded-2xl text-center bg-slate-900/50">
+                        <i class="fa-solid fa-camera text-xl text-barber-gold block mb-1"></i>
+                        <span class="text-slate-300 font-semibold">ถ่ายหน้าจอราคา</span>
+                        <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleTravelProofUpload(event)">
+                    </label>
+                    <label class="cursor-pointer border-2 border-dashed border-slate-700 hover:border-barber-gold p-4 rounded-2xl text-center bg-slate-900/50">
+                        <i class="fa-solid fa-image text-xl text-barber-gold block mb-1"></i>
+                        <span class="text-slate-300 font-semibold">เลือกรูปแคป</span>
+                        <input type="file" accept="image/*" class="hidden" onchange="handleTravelProofUpload(event)">
+                    </label>
+                </div>
+                <div id="travel-proof-box" class="hidden flex gap-3 items-start bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+                    <img id="travel-proof-preview" src="" class="w-20 h-28 object-cover rounded-lg border border-slate-700 cursor-pointer" onclick="openSingleImage(this.src, 'หลักฐานค่าเดินทาง')">
+                    <div class="flex-1 space-y-2">
+                        <button onclick="readFareFromProof()" id="travel-ocr-btn" class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 hover:border-barber-gold text-white font-semibold">
+                            <i class="fa-solid fa-wand-magic-sparkles text-barber-gold mr-1"></i> อ่านยอดจากรูปอัตโนมัติ
+                        </button>
+                        <p id="travel-ocr-status" class="text-[11px] text-slate-400"></p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-300 font-semibold mb-1">แอปที่ใช้</label>
+                        <select id="travel-app" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white">
+                            <option>Grab</option><option>Bolt</option><option>LINE MAN</option><option>inDrive</option><option>อื่น ๆ</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-300 font-semibold mb-1">ยอดตามรูป (ไป-กลับ, ฿)</label>
+                        <input type="number" id="travel-grab-amount" min="0" oninput="updateTravelSummary()" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-barber-gold">
+                    </div>
+                </div>
+                <p id="travel-grab-warning" class="hidden text-[11px] text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5"></p>
+            </div>
+
+            <!-- Summary -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-1.5 text-xs">
+                <div class="flex justify-between text-slate-400"><span>ค่าตัด / บริการ</span><span id="travel-sum-service" class="text-white"></span></div>
+                <div class="flex justify-between text-slate-400"><span>ค่าเดินทาง</span><span id="travel-sum-fee" class="text-white"></span></div>
+                <div class="flex justify-between text-base font-extrabold text-white pt-2 border-t border-slate-800"><span>ยอดรวมใหม่</span><span id="travel-sum-total" class="gold-gradient-text"></span></div>
+                <p id="travel-sum-diff" class="text-[11px] pt-1"></p>
+                <p class="text-[10px] text-slate-500">ค่าเดินทางโอนให้ช่างเต็มจำนวน ไม่หักคอมมิชชัน</p>
+            </div>
+
+            <button onclick="confirmTravelAndAccept()" id="travel-confirm-btn" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all">
+                <i class="fa-solid fa-check mr-1"></i> ยืนยันค่าเดินทาง & รับงาน
+            </button>
+        </div>
+    </div>
+
+    <!-- Cancel Booking Modal (Customer) -->
+    <div id="cancel-modal" class="fixed inset-0 z-[60] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="bg-barber-card border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
+            <button onclick="closeCancelModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-900 border border-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-sm">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="space-y-1 pr-8">
+                <span class="text-xs font-bold text-rose-400 uppercase tracking-wider">CANCEL BOOKING</span>
+                <h3 class="text-xl font-bold text-white">ยืนยันการยกเลิกคิว</h3>
+            </div>
+            <div id="cancel-modal-content" class="space-y-3 text-xs"></div>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="closeCancelModal()" class="py-3 rounded-xl bg-slate-800 border border-slate-700 text-white font-semibold text-sm">ไม่ยกเลิก</button>
+                <button onclick="confirmCancelOrder()" class="py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm">ยืนยันยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Lightbox -->
+    <div id="lightbox" class="fixed inset-0 z-[70] bg-black/95 flex items-center justify-center p-4 hidden" onclick="if(event.target===this)closeLightbox()">
+        <button onclick="closeLightbox()" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-slate-800 text-white flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+        <button onclick="stepLightbox(-1)" class="absolute left-3 w-10 h-10 rounded-full bg-slate-800/80 text-white flex items-center justify-center"><i class="fa-solid fa-chevron-left"></i></button>
+        <div class="max-w-2xl w-full text-center space-y-3">
+            <img id="lightbox-img" src="" class="max-h-[75vh] mx-auto rounded-2xl object-contain">
+            <p id="lightbox-caption" class="text-sm text-white font-semibold"></p>
+            <p id="lightbox-counter" class="text-xs text-slate-400"></p>
+        </div>
+        <button onclick="stepLightbox(1)" class="absolute right-3 w-10 h-10 rounded-full bg-slate-800/80 text-white flex items-center justify-center"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+
+    <!-- Authentication Modal (Register / Login) -->
+    <div id="auth-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="bg-barber-card border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl relative">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="text-center space-y-1">
+                <div class="w-12 h-12 rounded-2xl bg-barber-gold text-slate-950 font-black text-xl flex items-center justify-center mx-auto mb-2">
+                    <i class="fa-solid fa-scissors"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">เข้าสู่ระบบ / สมัครสมาชิก</h3>
+                <p class="text-xs text-slate-400">เลือกประเภทบัญชีผู้ใช้งานของคุณ</p>
+            </div>
+
+            <!-- Role Selector in Auth -->
+            <div class="grid grid-cols-2 gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
+                <button onclick="setAuthRole('customer')" id="auth-role-customer" class="py-2 rounded-xl text-xs font-bold bg-barber-gold text-slate-950">
+                    ลูกค้าทั่วไป
+                </button>
+                <button onclick="setAuthRole('barber')" id="auth-role-barber" class="py-2 rounded-xl text-xs font-bold text-slate-400">
+                    ช่างตัดผม
+                </button>
+            </div>
+
+            <form onsubmit="handleAuthSubmit(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block text-slate-300 font-semibold mb-1">ชื่อ-นามสกุล</label>
+                    <input type="text" required placeholder="เช่น คุณสมชาย สายหล่อ" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-semibold mb-1">เบอร์โทรศัพท์ (สำหรับ OTP)</label>
+                    <input type="tel" required placeholder="08X-XXX-XXXX" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white">
+                </div>
+                <div id="auth-barber-extra-fields" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-slate-300 font-semibold mb-1">ชื่อร้าน / ชื่อโปรไฟล์ช่าง</label>
+                        <input type="text" placeholder="เช่น ช่างบอย Barber Vintage" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white">
+                    </div>
+                    <div>
+                        <label class="block text-slate-300 font-semibold mb-1">สไตล์ทรงผมที่ถนัด</label>
+                        <input type="text" placeholder="เช่น Skin Fade, Two Block, Beard Trim" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-3 bg-barber-gold hover:bg-barber-goldHover text-slate-950 font-bold rounded-xl transition-all shadow">
+                    เข้าสู่ระบบ / สมัครเข้าใช้งาน
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application State & Interactive Logic Script -->
+    <script>
+        // =====================================================================
+        // GLOBAL DATA STATE
+        // =====================================================================
+        let currentRole = 'customer'; // 'customer', 'barber', 'admin'
+        let currentUser = {
+            id: 'u101',
+            name: 'คุณณัฐวุฒิ สายหล่อ',
+            phone: '089-123-4567',
+            points: 120,
+            avatar: svgAvatar('ณ', '#3b82f6', '#1e3a8a')
+        };
+
+        let currentFilterMode = 'all'; // 'all', 'onsite', 'home'
+        let currentSelectedBarber = null;
+        let selectedServicesCart = [];
+        let bookingTypeChoice = 'onsite'; // 'onsite' or 'home'
+        let paymentMethodChoice = 'promptpay'; // 'promptpay', 'card', 'cash'
+        let platformCommissionRate = 10; // %
+
+        // Travel fee rules (Grab-like): base fare covers the first baseKm, then perKm; x2 when round trip
+        let travelSettings = { baseFare: 40, baseKm: 2, perKm: 12, roundTrip: true, cap: 600, tolerance: 30 };
+
+        // Late cancellation: within windowHours before start AND barber already accepted
+        // → customer pays confirmed travel fee + feePct% of service price (both go to the barber)
+        let cancelSettings = { windowHours: 2, feePct: 5 };
+
+        // ---- Self-contained artwork (works offline / inside sandboxed previews) ----
+        function svgUri(svg) { return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); }
+
+        function svgAvatar(letter, c1 = '#d4af37', c2 = '#7c5a12') {
+            return svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="200" height="200" fill="url(#g)"/><circle cx="100" cy="78" r="34" fill="#0b0f17" opacity=".18"/><path d="M36 200c6-46 34-70 64-70s58 24 64 70z" fill="#0b0f17" opacity=".18"/><text x="100" y="124" font-family="Prompt,Inter,sans-serif" font-size="72" font-weight="700" fill="#ffffff" text-anchor="middle">${letter}</text></svg>`);
+        }
+
+        function svgWork(style, label, tone = 0) {
+            const bgs = [['#1f293d', '#0b0f17'], ['#2a2214', '#0b0f17'], ['#1b2433', '#111827'], ['#2b1f2f', '#0b0f17']];
+            const [a, b] = bgs[tone % bgs.length];
+            const hair = {
+                'Fade': '<path d="M224 214c0-62 38-96 76-96s76 34 76 96c-12-24-32-36-76-36s-64 12-76 36z" fill="#d4af37"/><path d="M230 222v36M370 222v36" stroke="#d4af37" stroke-width="12" opacity=".3"/>',
+                'Two Block': '<path d="M214 238c-6-82 40-124 86-124s94 42 86 124c-14-40-42-60-86-60-30 0-48 20-62 42z" fill="#d4af37"/>',
+                'Mullet': '<path d="M220 222c0-64 38-102 80-102s80 38 80 102v104c-10-30-14-62-14-102-20-18-42-26-66-26s-46 8-66 26c0 40-4 72-14 102z" fill="#d4af37"/>',
+                'Beard': '<path d="M226 210c0-58 36-88 74-88s74 30 74 88c-14-16-40-24-74-24s-60 8-74 24z" fill="#d4af37"/><path d="M230 270c8 70 40 98 70 98s62-28 70-98c-20 20-42 28-70 28s-50-8-70-28z" fill="#b89628"/>'
+            };
+            const person = `<path d="M140 600c10-110 72-168 160-168s150 58 160 168z" fill="#1e293b"/><rect x="272" y="330" width="56" height="110" rx="20" fill="#475569"/><ellipse cx="300" cy="264" rx="74" ry="92" fill="#64748b"/>${hair[style] || ''}`;
+            const tools = `<g fill="none" stroke="#d4af37" stroke-width="14" stroke-linecap="round"><circle cx="220" cy="380" r="46"/><circle cx="380" cy="380" r="46"/><path d="M252 346 400 130M348 346 200 130"/></g><circle cx="300" cy="238" r="12" fill="#d4af37"/>`;
+            const text = escapeHtml(label || '');
+            return svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="600" height="600" fill="url(#bg)"/><circle cx="300" cy="250" r="210" fill="#d4af37" opacity=".06"/>${hair[style] ? person : tools}<rect y="512" width="600" height="88" fill="#000" opacity=".5"/><text x="300" y="568" font-family="Prompt,Inter,sans-serif" font-size="34" font-weight="600" fill="#fef3c7" text-anchor="middle">${text}</text></svg>`);
+        }
+
+        function svgQr(seed = 'BARBERGO') {
+            let h = 0; for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+            const rnd = () => (h = (h * 1664525 + 1013904223) >>> 0) / 4294967296;
+            const n = 25; let cells = '';
+            const finder = (x, y) => `<rect x="${x}" y="${y}" width="7" height="7" fill="#000"/><rect x="${x + 1}" y="${y + 1}" width="5" height="5" fill="#fff"/><rect x="${x + 2}" y="${y + 2}" width="3" height="3" fill="#000"/>`;
+            const inFinder = (x, y) => (x < 8 && y < 8) || (x > n - 9 && y < 8) || (x < 8 && y > n - 9);
+            for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!inFinder(x, y) && rnd() > 0.5) cells += `<rect x="${x}" y="${y}" width="1" height="1"/>`;
+            return svgUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 27 27" shape-rendering="crispEdges"><rect x="-1" y="-1" width="27" height="27" fill="#fff"/><g fill="#000">${cells}</g>${finder(0, 0)}${finder(n - 7, 0)}${finder(0, n - 7)}</svg>`);
+        }
+
+        const IMG_FALLBACK = svgWork('Other', 'BarberGo');
+
+        const STYLE_LABELS = {
+            'Fade': 'Skin Fade', 'Two Block': 'Two Block', 'Mullet': 'Mullet', 'Beard': 'ดูแลเครา', 'Other': 'อื่น ๆ'
+        };
+
+        const EQUIPMENT_PRESETS = [
+            'ปัตตาเลี่ยนไร้สาย', 'ปัตตาเลี่ยนกันขอบ (Trimmer)', 'เครื่องโกนฟอยล์ (Shaver)',
+            'กรรไกรตัด / กรรไกรซอย', 'มีดโกนสเตนเลส', 'ไดร์เป่าผม', 'ผ้าคลุมตัดผม',
+            'สเปรย์ฆ่าเชื้ออุปกรณ์', 'เก้าอี้พกพา', 'ผ้าร้อน Hot Towel', 'กระจกพกพา', 'ไฟวงแหวน (Ring Light)'
+        ];
+
+        // Master List of Barbers
+        let barbersData = [
+            {
+                id: 'b1',
+                name: 'ช่างเดี่ยว สุภาพ',
+                shopName: 'Deaw Vintage Barber Shop',
+                avatar: svgAvatar('ด', '#d4af37', '#7c5a12'),
+                rating: 4.9,
+                reviewsCount: 128,
+                specialties: ['Fade', 'Beard'],
+                specialtyText: 'Skin Fade & Vintage Specialist',
+                serviceModes: ['onsite', 'home'],
+                locationText: 'สยามสแควร์ ซอย 5 / กรุงเทพฯ',
+                distanceKm: 1.2,
+                lat: 13.7455, lng: 100.5340,
+                kycStatus: 'approved', // 'approved', 'pending'
+                isOnline: true,
+                experienceYears: 8,
+                bio: 'ตัดผมชายมากว่า 8 ปี เน้นงานเฟดเนียนไร้รอยต่อและทรงวินเทจคลาสสิก ใส่ใจทุกรายละเอียดตั้งแต่ปรึกษาทรงจนถึงเซ็ตผมก่อนกลับ',
+                experienceHistory: [
+                    { place: 'Bangkok Barber Academy', period: '2017', desc: 'จบหลักสูตรช่างตัดผมชายมืออาชีพ' },
+                    { place: 'The Gentlemen Barber สุขุมวิท', period: '2018 - 2022', desc: 'ช่างหลัก ดูแลลูกค้าประจำกว่า 300 ราย' },
+                    { place: 'Deaw Vintage Barber Shop', period: '2022 - ปัจจุบัน', desc: 'เปิดร้านของตัวเอง เน้น Skin Fade และ Hot Towel Shave' }
+                ],
+                equipment: ['ปัตตาเลี่ยนไร้สาย', 'ปัตตาเลี่ยนกันขอบ (Trimmer)', 'เครื่องโกนฟอยล์ (Shaver)', 'มีดโกนสเตนเลส', 'ผ้าร้อน Hot Towel', 'สเปรย์ฆ่าเชื้ออุปกรณ์'],
+                portfolio: [
+                    { id: 'p1_1', img: svgWork('Fade', 'Mid Skin Fade', 0), caption: 'Mid Skin Fade + หวีเสยวินเทจ', style: 'Fade' },
+                    { id: 'p1_2', img: svgWork('Fade', 'Sharp Line-up', 2), caption: 'กันขอบคมกริบด้วย Trimmer', style: 'Fade' },
+                    { id: 'p1_3', img: svgWork('Beard', 'Beard Trim', 1), caption: 'เล็มเคราทรงสี่เหลี่ยม + Hot Towel', style: 'Beard' },
+                    { id: 'p1_4', img: svgWork('Fade', 'Low Fade Texture', 3), caption: 'Low Fade เท็กซ์เจอร์ด้านบน', style: 'Fade' }
+                ],
+                services: [
+                    { id: 's1_1', name: 'ตัดผมชายสไตล์ Vintage / Fade', price: 450, duration: '45 นาที' },
+                    { id: 's1_2', name: 'โกนหนวด & ดูแลเครา Hot Towel', price: 250, duration: '30 นาที' },
+                    { id: 's1_3', name: 'สระผม นวดผ่อนคลายศีรษะ', price: 200, duration: '20 นาที' }
+                ]
+            },
+            {
+                id: 'b2',
+                name: 'ช่างบอย บาร์เบอร์',
+                shopName: 'Boy Modern Grooming',
+                avatar: svgAvatar('บ', '#10b981', '#065f46'),
+                rating: 4.8,
+                reviewsCount: 94,
+                specialties: ['Two Block', 'Mullet'],
+                specialtyText: 'Modern Crop & Two-Block เกาหลี',
+                serviceModes: ['onsite'],
+                locationText: 'อารีย์ พหลโยธิน / กรุงเทพฯ',
+                distanceKm: 3.5,
+                lat: 13.7797, lng: 100.5446,
+                kycStatus: 'approved',
+                isOnline: true,
+                experienceYears: 5,
+                bio: 'ถนัดทรงเกาหลีและทรงแฟชั่น อัปเดตเทรนด์ทุกเดือน ทำดัดวอลลุ่มให้ดูเป็นธรรมชาติ',
+                experienceHistory: [
+                    { place: 'Seoul Hair Workshop (คอร์สออนไลน์)', period: '2020', desc: 'เทคนิค Two Block และดัดชายสไตล์เกาหลี' },
+                    { place: 'Boy Modern Grooming', period: '2021 - ปัจจุบัน', desc: 'เจ้าของร้าน ย่านอารีย์' }
+                ],
+                equipment: ['ปัตตาเลี่ยนไร้สาย', 'กรรไกรตัด / กรรไกรซอย', 'ไดร์เป่าผม', 'ผ้าคลุมตัดผม'],
+                portfolio: [
+                    { id: 'p2_1', img: svgWork('Other', 'Boy Modern Grooming', 2), caption: 'บรรยากาศร้าน Boy Modern Grooming', style: 'Other' },
+                    { id: 'p2_2', img: svgWork('Two Block', 'Two Block', 0), caption: 'Two Block ปัดหน้า', style: 'Two Block' },
+                    { id: 'p2_3', img: svgWork('Mullet', 'Modern Mullet', 3), caption: 'Modern Mullet เท็กซ์เจอร์ธรรมชาติ', style: 'Mullet' }
+                ],
+                services: [
+                    { id: 's2_1', name: 'ตัดผมทรง Two Block / Modern Crop', price: 400, duration: '40 นาที' },
+                    { id: 's2_2', name: 'ดัดวอลลุ่มผมชาย (Perm)', price: 1200, duration: '90 นาที' }
+                ]
+            },
+            {
+                id: 'b3',
+                name: 'ช่างพีท คลาสสิก',
+                shopName: 'Pete Home Barber On-Demand',
+                avatar: svgAvatar('พ', '#f43f5e', '#881337'),
+                rating: 5.0,
+                reviewsCount: 156,
+                specialties: ['Fade', 'Mullet'],
+                specialtyText: 'บาร์เบอร์เดลิเวอรี มืออาชีพไปถึงบ้าน',
+                serviceModes: ['home'],
+                locationText: 'รับงานเขตรัตนาธิเบศร์-นนทบุรี',
+                distanceKm: 5.0,
+                lat: 13.8669, lng: 100.4987,
+                kycStatus: 'pending',
+                isOnline: true,
+                experienceYears: 10,
+                bio: 'ช่างเดลิเวอรีเต็มตัว พกอุปกรณ์ครบชุดพร้อมเก้าอี้และผ้าปูกันเศษผม ตัดเสร็จเก็บกวาดให้เรียบร้อย',
+                experienceHistory: [
+                    { place: 'ร้านตัดผมชายย่านงามวงศ์วาน', period: '2016 - 2021', desc: 'ช่างประจำร้าน' },
+                    { place: 'Pete Home Barber On-Demand', period: '2021 - ปัจจุบัน', desc: 'รับงานนอกสถานที่ บ้าน/คอนโด/ออฟฟิศ' }
+                ],
+                equipment: ['ปัตตาเลี่ยนไร้สาย', 'เก้าอี้พกพา', 'ผ้าคลุมตัดผม', 'กระจกพกพา', 'สเปรย์ฆ่าเชื้ออุปกรณ์'],
+                portfolio: [
+                    { id: 'p3_1', img: svgWork('Other', 'Home Service Kit', 1), caption: 'ชุดอุปกรณ์พกไปตัดถึงบ้าน', style: 'Other' },
+                    { id: 'p3_2', img: svgWork('Mullet', 'Mullet Fade', 2), caption: 'Mullet + Burst Fade ตัดที่คอนโดลูกค้า', style: 'Mullet' },
+                    { id: 'p3_3', img: svgWork('Fade', 'High Fade', 0), caption: 'High Fade เก็บงานเรียบร้อยก่อนกลับ', style: 'Fade' }
+                ],
+                services: [
+                    { id: 's3_1', name: 'ตัดผมเดลิเวอรีพรีเมียมถึงบ้าน', price: 550, duration: '50 นาที' },
+                    { id: 's3_2', name: 'เซ็ตทรงผมออกงานเดลิเวอรี', price: 300, duration: '25 นาที' }
+                ]
+            }
+        ];
+
+        // Active Orders Shared Between Customer & Barber Dashboards
+        let ordersData = [
+            {
+                id: '#BG-9021',
+                customerName: 'คุณณัฐวุฒิ สายหล่อ',
+                customerPhone: '089-123-4567',
+                barberId: 'b1',
+                barberName: 'ช่างเดี่ยว สุภาพ',
+                servicesList: ['ตัดผมชายสไตล์ Vintage / Fade', 'โกนหนวด & ดูแลเครา Hot Towel'],
+                type: 'onsite',
+                typeName: 'ไปที่ร้าน (In-Shop)',
+                address: '-',
+                date: '2026-10-12',
+                time: '14:00 น. - 15:00 น.',
+                subtotal: 700,
+                deliveryFee: 0,
+                grandTotal: 700,
+                distanceKm: 0,
+                travelStatus: 'none',
+                paidAmount: 700,
+                paymentMethod: 'PromptPay QR (ชำระแล้ว)',
+                status: 'pending', // 'pending', 'accepted', 'in_progress', 'completed'
+                statusText: 'รอช่างกดรับงาน'
+            },
+            {
+                id: '#BG-9034',
+                customerName: 'คุณณัฐวุฒิ สายหล่อ',
+                customerPhone: '089-123-4567',
+                barberId: 'b3',
+                barberName: 'ช่างพีท คลาสสิก',
+                servicesList: ['ตัดผมเดลิเวอรีพรีเมียมถึงบ้าน'],
+                type: 'home',
+                typeName: 'ตัดนอกสถานที่ (At-Home)',
+                address: 'คอนโด The Line งามวงศ์วาน ตึก B ชั้น 12',
+                date: '2026-10-13',
+                time: '18:00 น. - 19:00 น.',
+                subtotal: 550,
+                deliveryFee: 152,
+                grandTotal: 702,
+                distanceKm: 5,
+                travelStatus: 'estimated',
+                travelMethod: null,
+                travelProof: null,
+                paidAmount: 702,
+                paymentMethod: 'PromptPay QR (ชำระแล้ว)',
+                status: 'pending',
+                statusText: 'รอช่างกดรับงาน'
+            }
+        ];
+
+        // =====================================================================
+        // HELPERS
+        // =====================================================================
+        function escapeHtml(str) {
+            return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        // Resize & compress an image file to a data URL (keeps memory small on phones)
+        function compressImage(file, maxSize = 1200, quality = 0.85) {
+            return new Promise((resolve, reject) => {
+                if (!file.type.startsWith('image/')) return reject(new Error('not-image'));
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+                        const canvas = document.createElement('canvas');
+                        canvas.width = Math.round(img.width * scale);
+                        canvas.height = Math.round(img.height * scale);
+                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // =====================================================================
+        // INITIALIZATION & LIFECYCLE
+        // =====================================================================
+        window.onload = function() {
+            document.getElementById('user-avatar-img').src = currentUser.avatar;
+            document.getElementById('promptpay-qr-img').src = svgQr('PROMPTPAY_BARBERGO_PAYMENT');
+            renderCustomerBarbers();
+            renderCustomerOrders();
+            renderBarberJobs();
+            renderBarberHeader();
+            renderBarberPortfolioEditor();
+            renderBarberServicesManager();
+            renderAdminKYC();
+            renderTravelSettings();
+            renderCancelSettings();
+            generateTimeSlots();
+            setInterval(renderCustomerOrders, 60000);
+        };
+
+        // =====================================================================
+        // ROLE SWITCHING ENGINE
+        // =====================================================================
+        function switchRole(role) {
+            currentRole = role;
+
+            // Views Toggle
+            document.getElementById('view-customer').classList.add('hidden');
+            document.getElementById('view-barber').classList.add('hidden');
+            document.getElementById('view-admin').classList.add('hidden');
+
+            document.getElementById(`view-${role}`).classList.remove('hidden');
+
+            // Button Styles Desktop
+            ['customer', 'barber', 'admin'].forEach(r => {
+                const btn = document.getElementById(`role-btn-${r}`);
+                const mBtn = document.getElementById(`m-role-btn-${r}`);
+                if (r === role) {
+                    btn.className = "px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 bg-barber-gold text-slate-950 shadow";
+                    mBtn.className = "text-barber-gold font-bold";
+                } else {
+                    btn.className = "px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-all duration-200";
+                    mBtn.className = "text-slate-400";
+                }
+            });
+
+            // Update Avatar Badge Role
+            const roleDisplay = document.getElementById('user-role-display');
+            if (role === 'customer') roleDisplay.innerText = 'ลูกค้า (Customer)';
+            else if (role === 'barber') roleDisplay.innerText = 'ช่างตัดผม (Barber)';
+            else if (role === 'admin') roleDisplay.innerText = 'ผู้ดูแลระบบ (Admin)';
+
+            showToast(`สลับไปที่บทบาท: ${role.toUpperCase()}`, 'info');
+        }
+
+        // =====================================================================
+        // CUSTOMER PORTAL LOGIC
+        // =====================================================================
+        function renderCustomerBarbers() {
+            const grid = document.getElementById('customer-barbers-grid');
+            const searchVal = document.getElementById('search-barber-input').value.toLowerCase();
+            const styleVal = document.getElementById('filter-style-select').value;
+
+            const filtered = barbersData.filter(b => {
+                // Filter Mode
+                if (currentFilterMode === 'onsite' && !b.serviceModes.includes('onsite')) return false;
+                if (currentFilterMode === 'home' && !b.serviceModes.includes('home')) return false;
+
+                // Search Val
+                const matchesSearch = b.name.toLowerCase().includes(searchVal) ||
+                                      b.shopName.toLowerCase().includes(searchVal) ||
+                                      b.locationText.toLowerCase().includes(searchVal) ||
+                                      (b.specialtyText || '').toLowerCase().includes(searchVal);
+
+                // Style Val
+                const matchesStyle = styleVal === '' || b.specialties.includes(styleVal);
+
+                return matchesSearch && matchesStyle;
+            });
+
+            document.getElementById('barber-count-text').innerText = filtered.length;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-barber-card border border-slate-800 rounded-2xl p-10 text-center text-slate-500">
+                        <i class="fa-solid fa-scissors text-3xl mb-2 text-slate-600"></i>
+                        <p class="text-sm font-semibold">ไม่พบช่างตัดผมตรงตามเงื่อนไขค้นหา</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(b => `
+                <div class="bg-barber-card border border-slate-800 hover:border-barber-gold/60 rounded-3xl p-5 transition-all space-y-4 flex flex-col justify-between shadow-xl">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-center space-x-3 cursor-pointer" onclick="openPortfolioModal('${b.id}')">
+                                <img src="${b.avatar}" onerror="this.src='${IMG_FALLBACK}'" class="w-14 h-14 rounded-2xl object-cover border border-slate-700">
+                                <div>
+                                    <h3 class="font-bold text-white text-base leading-tight">${escapeHtml(b.name)}</h3>
+                                    <span class="text-xs text-barber-gold font-medium block mt-0.5">${escapeHtml(b.shopName)}</span>
+                                    <span class="text-[10px] text-slate-400 block mt-0.5"><i class="fa-solid fa-award mr-1 text-barber-gold"></i>ประสบการณ์ ${b.experienceYears || 0} ปี</span>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold text-xs flex items-center gap-1 shrink-0">
+                                <i class="fa-solid fa-star"></i> ${b.rating}
+                            </span>
+                        </div>
+
+                        <p class="text-xs text-slate-400">${escapeHtml(b.specialtyText)}</p>
+
+                        ${b.portfolio.length ? `
+                            <div class="grid grid-cols-3 gap-1.5">
+                                ${b.portfolio.slice(0, 3).map((p, i) => `
+                                    <div class="relative cursor-pointer" onclick="openLightbox('${b.id}', ${i})">
+                                        <img src="${p.img}" onerror="this.src='${IMG_FALLBACK}'" class="h-20 w-full object-cover rounded-xl border border-slate-800 hover:border-barber-gold transition-all">
+                                        ${i === 2 && b.portfolio.length > 3 ? `<div class="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center text-white text-xs font-bold">+${b.portfolio.length - 3}</div>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : `<div class="text-[10px] text-slate-600 italic">ยังไม่มีภาพผลงาน</div>`}
+
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            ${b.serviceModes.includes('onsite') ? '<span class="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-[10px] text-slate-300"><i class="fa-solid fa-store text-barber-gold mr-1"></i>มีร้าน</span>' : ''}
+                            ${b.serviceModes.includes('home') ? '<span class="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-[10px] text-slate-300"><i class="fa-solid fa-house text-barber-gold mr-1"></i>ไปตัดถึงบ้าน</span>' : ''}
+                            <span class="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-[10px] text-slate-400"><i class="fa-solid fa-location-dot mr-1"></i>${b.distanceKm} กม.</span>
+                            <span class="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-[10px] text-slate-400"><i class="fa-solid fa-toolbox mr-1"></i>อุปกรณ์ ${b.equipment.length} รายการ</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+                        <div>
+                            <span class="text-[10px] text-slate-500 block">เริ่มต้น</span>
+                            <span class="text-base font-extrabold text-white">฿${b.services[0] ? b.services[0].price : 350}</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="openPortfolioModal('${b.id}')" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-barber-gold text-white font-semibold text-xs transition-all">
+                                <i class="fa-solid fa-images mr-1 text-barber-gold"></i> ผลงาน
+                            </button>
+                            <button onclick="openBookingModal('${b.id}')" class="px-4 py-2 rounded-xl bg-barber-gold hover:bg-barber-goldHover text-slate-950 font-bold text-xs transition-all shadow">
+                                <i class="fa-solid fa-calendar-check mr-1"></i> จองคิว
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function setFilterMode(mode) {
+            currentFilterMode = mode;
+            ['all', 'onsite', 'home'].forEach(m => {
+                const btn = document.getElementById(`filter-btn-${m}`);
+                if (m === mode) {
+                    btn.className = "px-3.5 py-2 rounded-xl text-xs font-semibold bg-barber-gold text-slate-950";
+                } else {
+                    btn.className = "px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 hover:text-white border border-slate-800";
+                }
+            });
+            renderCustomerBarbers();
+        }
+
+        function filterBarbers() {
+            renderCustomerBarbers();
+        }
+
+        // =====================================================================
+        // BARBER PORTFOLIO MODAL (CUSTOMER VIEW) & LIGHTBOX
+        // =====================================================================
+        function openPortfolioModal(barberId) {
+            const b = barbersData.find(x => x.id === barberId);
+            if (!b) return;
+
+            const content = document.getElementById('portfolio-modal-content');
+            content.innerHTML = `
+                <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 sm:p-8 border-b border-slate-800 rounded-t-3xl">
+                    <div class="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+                        <img src="${b.avatar}" onerror="this.src='${IMG_FALLBACK}'" class="w-28 h-28 rounded-3xl object-cover border-2 border-barber-gold shadow-lg shrink-0">
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
+                                <h3 class="text-2xl font-black text-white">${escapeHtml(b.name)}</h3>
+                                ${b.kycStatus === 'approved' ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"><i class="fa-solid fa-check-double"></i> ยืนยันตัวตนแล้ว</span>' : ''}
+                            </div>
+                            <p class="text-barber-gold text-sm font-semibold">${escapeHtml(b.shopName)}</p>
+                            <div class="flex flex-wrap gap-2 justify-center sm:justify-start text-xs">
+                                <span class="px-2.5 py-1 rounded-lg bg-slate-950/60 border border-slate-700 text-amber-400 font-bold"><i class="fa-solid fa-star mr-1"></i>${b.rating} (${b.reviewsCount} รีวิว)</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-slate-950/60 border border-slate-700 text-white"><i class="fa-solid fa-award mr-1 text-barber-gold"></i>ประสบการณ์ ${b.experienceYears || 0} ปี</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-slate-950/60 border border-slate-700 text-slate-300"><i class="fa-solid fa-location-dot mr-1"></i>${escapeHtml(b.locationText)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    ${b.bio ? `<p class="text-sm text-slate-300 leading-relaxed mt-5">${escapeHtml(b.bio)}</p>` : ''}
+                </div>
+
+                <div class="p-6 sm:p-8 space-y-7">
+                    <!-- Gallery -->
+                    <div class="space-y-3">
+                        <h4 class="font-bold text-white text-base flex items-center gap-2"><i class="fa-solid fa-images text-barber-gold"></i> ผลงานที่เคยตัด <span class="text-xs text-slate-500 font-normal">(${b.portfolio.length} รูป)</span></h4>
+                        ${b.portfolio.length ? `
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                ${b.portfolio.map((p, i) => `
+                                    <div class="group cursor-pointer space-y-1" onclick="openLightbox('${b.id}', ${i})">
+                                        <div class="relative overflow-hidden rounded-2xl border border-slate-800 group-hover:border-barber-gold transition-all">
+                                            <img src="${p.img}" onerror="this.src='${IMG_FALLBACK}'" class="aspect-square w-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                            <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 text-[10px] text-barber-gold font-bold">${STYLE_LABELS[p.style] || p.style}</span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-300 line-clamp-2">${escapeHtml(p.caption)}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : '<p class="text-xs text-slate-500 italic">ช่างยังไม่ได้เพิ่มภาพผลงาน</p>'}
+                    </div>
+
+                    <!-- Experience timeline -->
+                    <div class="space-y-3">
+                        <h4 class="font-bold text-white text-base flex items-center gap-2"><i class="fa-solid fa-briefcase text-barber-gold"></i> ประวัติการทำงาน</h4>
+                        ${b.experienceHistory.length ? `
+                            <div class="relative pl-5 space-y-4 border-l-2 border-slate-800 ml-1.5">
+                                ${b.experienceHistory.map(h => `
+                                    <div class="relative">
+                                        <span class="absolute -left-[27px] top-1 w-3 h-3 rounded-full bg-barber-gold ring-4 ring-barber-card"></span>
+                                        <span class="text-[11px] text-barber-gold font-bold">${escapeHtml(h.period)}</span>
+                                        <p class="text-sm text-white font-semibold">${escapeHtml(h.place)}</p>
+                                        ${h.desc ? `<p class="text-xs text-slate-400">${escapeHtml(h.desc)}</p>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : '<p class="text-xs text-slate-500 italic">ยังไม่มีข้อมูล</p>'}
+                    </div>
+
+                    <!-- Equipment -->
+                    <div class="space-y-3">
+                        <h4 class="font-bold text-white text-base flex items-center gap-2"><i class="fa-solid fa-toolbox text-barber-gold"></i> อุปกรณ์ที่ช่างใช้</h4>
+                        ${b.equipment.length ? `
+                            <div class="flex flex-wrap gap-2">
+                                ${b.equipment.map(eq => `<span class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-200"><i class="fa-solid fa-check text-emerald-400 mr-1"></i>${escapeHtml(eq)}</span>`).join('')}
+                            </div>
+                        ` : '<p class="text-xs text-slate-500 italic">ยังไม่มีข้อมูล</p>'}
+                    </div>
+
+                    <button onclick="closePortfolioModal(); openBookingModal('${b.id}')" class="w-full py-3 rounded-xl bg-barber-gold hover:bg-barber-goldHover text-slate-950 font-bold text-sm transition-all shadow-lg shadow-amber-500/20">
+                        <i class="fa-solid fa-calendar-check mr-1"></i> จองคิวกับ${escapeHtml(b.name)}
+                    </button>
+                </div>
+            `;
+            document.getElementById('portfolio-modal').classList.remove('hidden');
+        }
+
+        function closePortfolioModal() {
+            document.getElementById('portfolio-modal').classList.add('hidden');
+        }
+
+        let lightboxState = { barberId: null, idx: 0 };
+
+        function openLightbox(barberId, idx) {
+            lightboxState = { barberId, idx };
+            renderLightbox();
+            document.getElementById('lightbox').classList.remove('hidden');
+        }
+
+        function renderLightbox() {
+            const b = barbersData.find(x => x.id === lightboxState.barberId);
+            if (!b || !b.portfolio.length) return closeLightbox();
+            const p = b.portfolio[lightboxState.idx];
+            const img = document.getElementById('lightbox-img');
+            img.onerror = () => { img.onerror = null; img.src = IMG_FALLBACK; };
+            img.src = p.img;
+            document.getElementById('lightbox-caption').innerText = `${p.caption || ''} ${p.style ? '• ' + (STYLE_LABELS[p.style] || p.style) : ''}`;
+            document.getElementById('lightbox-counter').innerText = `${b.name} — ${lightboxState.idx + 1} / ${b.portfolio.length}`;
+        }
+
+        function stepLightbox(dir) {
+            const b = barbersData.find(x => x.id === lightboxState.barberId);
+            if (!b) return;
+            lightboxState.idx = (lightboxState.idx + dir + b.portfolio.length) % b.portfolio.length;
+            renderLightbox();
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.add('hidden');
+        }
+
+        document.addEventListener('keydown', e => {
+            if (document.getElementById('lightbox').classList.contains('hidden')) return;
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowRight') stepLightbox(1);
+            if (e.key === 'ArrowLeft') stepLightbox(-1);
+        });
+
+        // =====================================================================
+        // BOOKING ENGINE MODAL & CART
+        // =====================================================================
+        function openBookingModal(barberId) {
+            currentSelectedBarber = barbersData.find(b => b.id === barberId);
+            selectedServicesCart = [];
+            bookingTypeChoice = currentSelectedBarber.serviceModes.includes('onsite') ? 'onsite' : 'home';
+
+            document.getElementById('modal-barber-name').innerText = `(${currentSelectedBarber.name})`;
+            document.getElementById('booking-distance-input').value = currentSelectedBarber.distanceKm;
+            selectBookingType(bookingTypeChoice);
+            renderModalServices();
+            updateCartSummary();
+
+            document.getElementById('booking-modal').classList.remove('hidden');
+        }
+
+        function closeBookingModal() {
+            document.getElementById('booking-modal').classList.add('hidden');
+        }
+
+        function selectBookingType(type) {
+            bookingTypeChoice = type;
+            const btnOnsite = document.getElementById('btype-onsite');
+            const btnHome = document.getElementById('btype-home');
+            const addrBox = document.getElementById('booking-address-box');
+
+            if (type === 'onsite') {
+                btnOnsite.className = "p-3.5 rounded-2xl border border-barber-gold bg-amber-500/10 text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2";
+                btnHome.className = "p-3.5 rounded-2xl border border-slate-800 bg-slate-900 text-slate-400 font-medium text-xs sm:text-sm flex items-center justify-center gap-2";
+                addrBox.classList.add('hidden');
+            } else {
+                btnHome.className = "p-3.5 rounded-2xl border border-barber-gold bg-amber-500/10 text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2";
+                btnOnsite.className = "p-3.5 rounded-2xl border border-slate-800 bg-slate-900 text-slate-400 font-medium text-xs sm:text-sm flex items-center justify-center gap-2";
+                addrBox.classList.remove('hidden');
+            }
+            updateCartSummary();
+        }
+
+        function renderModalServices() {
+            const list = document.getElementById('modal-services-list');
+            if (!currentSelectedBarber) return;
+
+            list.innerHTML = currentSelectedBarber.services.map(s => {
+                const isChecked = selectedServicesCart.some(item => item.id === s.id);
+                return `
+                    <div onclick="toggleCartService('${s.id}')" class="cursor-pointer p-3 rounded-xl border ${isChecked ? 'border-barber-gold bg-amber-500/10' : 'border-slate-800 bg-slate-900'} flex items-center justify-between text-xs transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="w-5 h-5 rounded border ${isChecked ? 'bg-barber-gold border-barber-gold text-slate-950' : 'border-slate-700'} flex items-center justify-center">
+                                ${isChecked ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
+                            </div>
+                            <div>
+                                <span class="font-bold text-white block">${escapeHtml(s.name)}</span>
+                                <span class="text-[10px] text-slate-400"><i class="fa-regular fa-clock mr-1"></i>${s.duration}</span>
+                            </div>
+                        </div>
+                        <span class="font-extrabold text-barber-gold">฿${s.price}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleCartService(serviceId) {
+            const service = currentSelectedBarber.services.find(s => s.id === serviceId);
+            const index = selectedServicesCart.findIndex(s => s.id === serviceId);
+
+            if (index > -1) {
+                selectedServicesCart.splice(index, 1);
+            } else {
+                selectedServicesCart.push(service);
+            }
+
+            renderModalServices();
+            updateCartSummary();
+        }
+
+        function generateTimeSlots() {
+            const select = document.getElementById('booking-time-select');
+            const slots = [
+                '10:00 น. - 11:00 น.',
+                '11:30 น. - 12:30 น.',
+                '13:30 น. - 14:30 น.',
+                '15:00 น. - 16:00 น.',
+                '16:30 น. - 17:30 น.',
+                '18:00 น. - 19:00 น.'
+            ];
+            select.innerHTML = slots.map(slot => `<option value="${slot}">${slot}</option>`).join('');
+
+            // Set default date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const picker = document.getElementById('booking-date-picker');
+            if (picker && !picker.value) {
+                picker.value = tomorrow.toISOString().split('T')[0];
+            }
+        }
+
+        function setPaymentMethod(method) {
+            paymentMethodChoice = method;
+            ['promptpay', 'card', 'cash'].forEach(m => {
+                const btn = document.getElementById(`pay-${m}`);
+                if (m === method) {
+                    btn.className = "p-2.5 rounded-xl border border-barber-gold bg-amber-500/10 text-white text-xs font-medium text-center";
+                } else {
+                    btn.className = "p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 text-xs font-medium text-center";
+                }
+            });
+
+            const qrBox = document.getElementById('promptpay-qr-box');
+            if (method === 'promptpay') qrBox.classList.remove('hidden');
+            else qrBox.classList.add('hidden');
+        }
+
+        function updateCartSummary() {
+            const itemsList = document.getElementById('cart-items-list');
+            const btnConfirm = document.getElementById('btn-confirm-checkout');
+
+            if (selectedServicesCart.length === 0) {
+                itemsList.innerHTML = `<p class="text-slate-500 italic">กรุณาเลือกบริการอย่างน้อย 1 รายการ...</p>`;
+                btnConfirm.disabled = true;
+                btnConfirm.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                itemsList.innerHTML = selectedServicesCart.map(s => `
+                    <div class="flex justify-between">
+                        <span>• ${escapeHtml(s.name)}</span>
+                        <span class="text-white">฿${s.price}</span>
+                    </div>
+                `).join('');
+                btnConfirm.disabled = false;
+                btnConfirm.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            const subtotal = selectedServicesCart.reduce((acc, curr) => acc + curr.price, 0);
+            const deliveryFee = bookingTypeChoice === 'home' ? currentTravelEstimate().fee : 0;
+            const grandTotal = subtotal + deliveryFee;
+            const pointsEarned = Math.floor(grandTotal / 10);
+
+            document.getElementById('cart-subtotal').innerText = `฿${subtotal}`;
+            document.getElementById('cart-delivery-fee').innerText = `฿${deliveryFee}`;
+            document.getElementById('cart-travel-tag').innerText = bookingTypeChoice === 'home' ? '(ประมาณการ)' : '';
+            document.getElementById('booking-travel-breakdown').innerText = travelBreakdownText(currentTravelEstimate());
+            document.getElementById('cart-cancel-policy').innerHTML = cancelPolicyText(bookingTypeChoice === 'home');
+            document.getElementById('cart-points-earned').innerText = `+${pointsEarned} แต้ม`;
+            document.getElementById('cart-grand-total').innerText = `฿${grandTotal}`;
+        }
+
+        function confirmBookingSubmit() {
+            const date = document.getElementById('booking-date-picker').value;
+            const time = document.getElementById('booking-time-select').value;
+            const address = document.getElementById('booking-address-input').value || 'บ้านลูกค้า (ตามพิกัด GPS)';
+
+            const subtotal = selectedServicesCart.reduce((acc, curr) => acc + curr.price, 0);
+            const deliveryFee = bookingTypeChoice === 'home' ? currentTravelEstimate().fee : 0;
+            const grandTotal = subtotal + deliveryFee;
+
+            const newOrder = {
+                id: '#BG-' + Math.floor(1000 + Math.random() * 9000),
+                customerName: currentUser.name,
+                customerPhone: currentUser.phone,
+                barberId: currentSelectedBarber.id,
+                barberName: currentSelectedBarber.name,
+                servicesList: selectedServicesCart.map(s => s.name),
+                type: bookingTypeChoice,
+                typeName: bookingTypeChoice === 'onsite' ? 'ไปที่ร้าน (In-Shop)' : 'ตัดนอกสถานที่ (At-Home)',
+                address: bookingTypeChoice === 'home' ? address : '-',
+                date: date,
+                time: time,
+                subtotal: subtotal,
+                deliveryFee: deliveryFee,
+                distanceKm: bookingTypeChoice === 'home' ? currentTravelEstimate().km : 0,
+                travelStatus: bookingTypeChoice === 'home' ? 'estimated' : 'none',
+                travelMethod: null,
+                travelProof: null,
+                paidAmount: paymentMethodChoice === 'cash' ? 0 : subtotal + deliveryFee,
+                grandTotal: grandTotal,
+                paymentMethod: paymentMethodChoice.toUpperCase() + ' (ชำระแล้ว)',
+                pointsEarned: Math.floor(grandTotal / 10),
+                status: 'pending',
+                statusText: 'รอช่างกดรับงาน'
+            };
+
+            ordersData.unshift(newOrder);
+
+            // Reward User Points
+            const pointsEarned = Math.floor(grandTotal / 10);
+            currentUser.points += pointsEarned;
+            document.getElementById('user-points-display').innerText = `${currentUser.points} แต้ม`;
+
+            closeBookingModal();
+            renderCustomerOrders();
+            renderBarberJobs();
+
+            showToast(`สั่งจองสำเร็จ! รหัส ${newOrder.id} ได้รับแต้มสะสม +${pointsEarned} แต้ม`, 'success');
+            scrollToCustomerTracking();
+        }
+
+        function scrollToCustomerTracking() {
+            document.getElementById('customer-tracking-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // =====================================================================
+        // CUSTOMER ORDER TRACKING & REVIEWS
+        // =====================================================================
+        function renderCustomerOrders() {
+            const container = document.getElementById('customer-orders-container');
+            if (ordersData.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-barber-card border border-slate-800 rounded-2xl p-8 text-center text-slate-500">
+                        <p class="text-sm">คุณยังไม่มีประวัติคิวจองบริการ</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = ordersData.map(o => {
+                let badgeClass = "bg-amber-500/10 text-amber-400 border-amber-500/30";
+                if (o.status === 'accepted') badgeClass = "bg-blue-500/10 text-blue-400 border-blue-500/30";
+                if (o.status === 'in_progress') badgeClass = "bg-purple-500/10 text-purple-400 border-purple-500/30 animate-pulse";
+                if (o.status === 'completed') badgeClass = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+                if (o.status === 'cancelled') badgeClass = "bg-rose-500/10 text-rose-400 border-rose-500/30";
+
+                return `
+                    <div class="bg-barber-card border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono text-barber-gold font-bold text-sm">${o.id}</span>
+                                <span class="text-slate-600">|</span>
+                                <span class="text-white text-xs font-semibold">${escapeHtml(o.barberName)}</span>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border ${badgeClass}">
+                                ${o.statusText}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                            <div>
+                                <span class="text-slate-500 block">รายการบริการ:</span>
+                                <span class="text-slate-200 font-medium">${escapeHtml(o.servicesList.join(', '))}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-500 block">วัน-เวลานัดหมาย:</span>
+                                <span class="text-slate-200 font-medium">${o.date} (${o.time})</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-500 block">ยอดสุทธิ:</span>
+                                <span class="text-barber-gold font-extrabold text-sm">฿${o.grandTotal}</span>
+                            </div>
+                        </div>
+
+                        ${travelInfoHtml(o, 'customer')}
+                        ${cancelInfoHtml(o, 'customer')}
+
+                        ${o.status === 'completed' ? `
+                            <div class="pt-2 border-t border-slate-800 flex justify-end">
+                                <button onclick="giveReviewPrompt('${o.id}')" class="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-barber-gold text-xs font-bold hover:bg-amber-500/20">
+                                    <i class="fa-solid fa-star mr-1"></i> ให้คะแนนรีวิวช่าง
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function giveReviewPrompt(orderId) {
+            showToast(`ขอบคุณสำหรับการให้คะแนนรีวิวสั่งซื้อคิว ${orderId}`, 'success');
+        }
+
+        // =====================================================================
+        // BARBER DASHBOARD LOGIC
+        // =====================================================================
+        function toggleBarberOnline() {
+            const btn = document.getElementById('barber-online-btn');
+            if (btn.innerText.includes('พร้อมรับงาน')) {
+                btn.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-600 text-white transition-all";
+                btn.innerHTML = '<i class="fa-solid fa-power-off mr-1"></i> ปิดรับงานชั่วคราว';
+                showToast('เปลี่ยนสถานะเป็น: ปิดรับงานชั่วคราว', 'info');
+            } else {
+                btn.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition-all";
+                btn.innerHTML = '<i class="fa-solid fa-signal mr-1"></i> พร้อมรับงาน (Online)';
+                showToast('เปลี่ยนสถานะเป็น: พร้อมรับงานเรียบร้อย', 'success');
+            }
+        }
+
+        function switchBarberTab(tab) {
+            ['jobs', 'portfolio', 'services', 'kyc'].forEach(t => {
+                const btn = document.getElementById(`btab-${t}`);
+                const sec = document.getElementById(`barber-sec-${t}`);
+                if (t === tab) {
+                    btn.className = "pb-3 border-b-2 border-barber-gold text-barber-gold flex items-center gap-2";
+                    sec.classList.remove('hidden');
+                } else {
+                    btn.className = "pb-3 text-slate-400 hover:text-white flex items-center gap-2";
+                    sec.classList.add('hidden');
+                }
+            });
+        }
+
+        function renderBarberJobs() {
+            const container = document.getElementById('barber-jobs-list');
+            if (ordersData.length === 0) {
+                container.innerHTML = `<p class="text-slate-500 text-xs italic">ไม่มีคิวงานที่ต้องจัดการ</p>`;
+                return;
+            }
+
+            container.innerHTML = ordersData.map((o, index) => `
+                <div class="bg-barber-card border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div class="flex items-center gap-3">
+                            <span class="font-mono text-barber-gold font-bold text-sm">${o.id}</span>
+                            <span class="text-slate-300 font-semibold text-xs">${escapeHtml(o.customerName)} (${o.customerPhone})</span>
+                        </div>
+                        <span class="text-xs text-slate-400">${o.typeName}</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <div>
+                            <span class="text-slate-500 block">บริการ:</span>
+                            <span class="text-slate-200">${escapeHtml(o.servicesList.join(', '))}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block">เวลา:</span>
+                            <span class="text-slate-200">${o.date} (${o.time})</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block">ยอดเงินชำระ:</span>
+                            <span class="text-barber-gold font-bold">฿${o.grandTotal}</span>
+                        </div>
+                    </div>
+
+                    ${travelInfoHtml(o, 'barber')}
+                    ${cancelInfoHtml(o, 'barber')}
+
+                    <!-- Barber Actions -->
+                    <div class="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+                        ${o.status === 'pending' ? `
+                            <button onclick="acceptOrder(${index})" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow">
+                                <i class="fa-solid fa-check mr-1"></i> กดรับงานคิวนี้
+                            </button>
+                        ` : ''}
+                        ${o.status === 'accepted' ? `
+                            <button onclick="updateOrderStatus(${index}, 'in_progress', 'กำลังตัดผม/ให้บริการ')" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow">
+                                <i class="fa-solid fa-scissors mr-1"></i> เริ่มให้บริการ
+                            </button>
+                        ` : ''}
+                        ${o.status === 'in_progress' ? `
+                            <button onclick="updateOrderStatus(${index}, 'completed', 'บริการเสร็จสิ้น')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow">
+                                <i class="fa-solid fa-circle-check mr-1"></i> บริการเสร็จสิ้น
+                            </button>
+                        ` : ''}
+                        ${o.status === 'cancelled' ? `
+                            <span class="text-rose-400 text-xs font-bold"><i class="fa-solid fa-ban mr-1"></i> ลูกค้ายกเลิกคิวนี้</span>
+                        ` : ''}
+                        ${o.status === 'completed' ? `
+                            <span class="text-emerald-400 text-xs font-bold"><i class="fa-solid fa-check-double mr-1"></i> ปิดงานเสร็จสิ้น</span>
+                            <button onclick="switchBarberTab('portfolio'); document.getElementById('pf-work-caption').focus()" class="px-3 py-1.5 bg-slate-800 border border-slate-700 hover:border-barber-gold text-white font-semibold text-xs rounded-xl">
+                                <i class="fa-solid fa-camera mr-1 text-barber-gold"></i> เพิ่มรูปผลงาน
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateOrderStatus(index, status, statusText) {
+            ordersData[index].status = status;
+            ordersData[index].statusText = statusText;
+            renderBarberJobs();
+            renderCustomerOrders();
+            showToast(`อัปเดตสถานะงาน: ${statusText}`, 'success');
+        }
+
+        // =====================================================================
+        // BARBER PROFILE / EXPERIENCE / EQUIPMENT / PORTFOLIO EDITOR
+        // =====================================================================
+        function myBarber() { return barbersData[0]; } // Example current logged-in barber
+
+        function refreshAllBarberViews() {
+            renderBarberHeader();
+            renderBarberPortfolioEditor();
+            renderCustomerBarbers();
+            renderAdminKYC();
+        }
+
+        function renderBarberHeader() {
+            const b = myBarber();
+            const avatar = document.getElementById('barber-profile-avatar');
+            avatar.onerror = () => { avatar.onerror = null; avatar.src = IMG_FALLBACK; };
+            avatar.src = b.avatar;
+            document.getElementById('barber-profile-name').innerText = b.name;
+            document.getElementById('barber-profile-sub').innerText = `${b.specialtyText} • ประสบการณ์ ${b.experienceYears || 0} ปี`;
+        }
+
+        function renderBarberPortfolioEditor() {
+            const b = myBarber();
+
+            // Avatar & form fields
+            const preview = document.getElementById('pf-avatar-preview');
+            preview.onerror = () => { preview.onerror = null; preview.src = IMG_FALLBACK; };
+            preview.src = b.avatar;
+            document.getElementById('pf-name').value = b.name;
+            document.getElementById('pf-years').value = b.experienceYears || 0;
+            document.getElementById('pf-specialty').value = b.specialtyText || '';
+            document.getElementById('pf-bio').value = b.bio || '';
+
+            // Experience history
+            document.getElementById('pf-history-list').innerHTML = b.experienceHistory.length
+                ? b.experienceHistory.map((h, i) => `
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-start justify-between gap-3 text-xs">
+                        <div>
+                            <span class="text-barber-gold font-bold">${escapeHtml(h.period)}</span>
+                            <span class="text-white font-semibold block">${escapeHtml(h.place)}</span>
+                            ${h.desc ? `<span class="text-slate-400">${escapeHtml(h.desc)}</span>` : ''}
+                        </div>
+                        <button onclick="deleteExperience(${i})" class="text-slate-500 hover:text-rose-400 shrink-0"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `).join('')
+                : '<p class="text-xs text-slate-500 italic">ยังไม่มีประวัติการทำงาน</p>';
+
+            // Equipment
+            document.getElementById('pf-equip-count').innerText = `${b.equipment.length} รายการ`;
+            document.getElementById('pf-equip-list').innerHTML = b.equipment.length
+                ? b.equipment.map((eq, i) => `
+                    <span class="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-barber-goldLight flex items-center gap-2">
+                        <i class="fa-solid fa-screwdriver-wrench text-barber-gold"></i>${escapeHtml(eq)}
+                        <button onclick="removeEquipment(${i})" class="text-slate-400 hover:text-rose-400"><i class="fa-solid fa-xmark"></i></button>
+                    </span>
+                `).join('')
+                : '<p class="text-xs text-slate-500 italic">ยังไม่ได้เพิ่มอุปกรณ์</p>';
+
+            const remaining = EQUIPMENT_PRESETS.filter(p => !b.equipment.includes(p));
+            document.getElementById('pf-equip-presets').innerHTML = remaining.length
+                ? remaining.map(p => `
+                    <button onclick="addEquipment(${JSON.stringify(p).replace(/"/g, '&quot;')})" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 hover:border-barber-gold text-[11px] text-slate-300">
+                        <i class="fa-solid fa-plus text-barber-gold mr-1"></i>${escapeHtml(p)}
+                    </button>
+                `).join('')
+                : '<span class="text-[11px] text-slate-500">เพิ่มครบทุกรายการแนะนำแล้ว</span>';
+
+            // Gallery
+            document.getElementById('pf-gallery-count').innerText = `${b.portfolio.length} รูป`;
+            document.getElementById('pf-gallery-grid').innerHTML = b.portfolio.length
+                ? b.portfolio.map((p, i) => `
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden group">
+                        <div class="relative cursor-pointer" onclick="openLightbox('${b.id}', ${i})">
+                            <img src="${p.img}" onerror="this.src='${IMG_FALLBACK}'" class="aspect-square w-full object-cover">
+                            <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 text-[10px] text-barber-gold font-bold">${STYLE_LABELS[p.style] || p.style}</span>
+                        </div>
+                        <div class="p-2.5 flex items-start justify-between gap-2">
+                            <p class="text-[11px] text-slate-300 line-clamp-2">${escapeHtml(p.caption) || '<span class="text-slate-500 italic">ไม่มีคำอธิบาย</span>'}</p>
+                            <button onclick="deletePortfolio(${i})" class="text-slate-500 hover:text-rose-400 text-xs shrink-0"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('')
+                : '<p class="col-span-full text-xs text-slate-500 italic text-center py-6">ยังไม่มีภาพผลงาน — ลองถ่ายรูปหลังตัดเสร็จทุกคิว</p>';
+
+            renderProfileCompleteness();
+        }
+
+        function renderProfileCompleteness() {
+            const b = myBarber();
+            const checks = [
+                { ok: !!b.avatar, hint: 'ใส่รูปโปรไฟล์' },
+                { ok: (b.bio || '').length >= 30, hint: 'เขียนแนะนำตัวอย่างน้อย 30 ตัวอักษร' },
+                { ok: b.experienceYears > 0, hint: 'ระบุจำนวนปีประสบการณ์' },
+                { ok: b.experienceHistory.length >= 1, hint: 'เพิ่มประวัติการทำงาน' },
+                { ok: b.equipment.length >= 3, hint: 'เพิ่มอุปกรณ์อย่างน้อย 3 รายการ' },
+                { ok: b.portfolio.length >= 4, hint: 'เพิ่มภาพผลงานอย่างน้อย 4 รูป' }
+            ];
+            const pct = Math.round(checks.filter(c => c.ok).length / checks.length * 100);
+            document.getElementById('pf-complete-text').innerText = `${pct}%`;
+            document.getElementById('pf-complete-bar').style.width = `${pct}%`;
+            const missing = checks.filter(c => !c.ok).map(c => c.hint);
+            document.getElementById('pf-complete-hint').innerText = missing.length
+                ? 'สิ่งที่ยังขาด: ' + missing.join(' • ')
+                : 'โปรไฟล์ครบถ้วน พร้อมดึงดูดลูกค้า!';
+        }
+
+        async function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            event.target.value = '';
+            if (!file) return;
+            try {
+                myBarber().avatar = await compressImage(file, 600);
+                refreshAllBarberViews();
+                showToast('อัปเดตรูปโปรไฟล์เรียบร้อย', 'success');
+            } catch (e) {
+                showToast('ไม่สามารถอ่านไฟล์รูปภาพได้', 'error');
+            }
+        }
+
+        function saveBarberProfile() {
+            const b = myBarber();
+            const name = document.getElementById('pf-name').value.trim();
+            const years = parseInt(document.getElementById('pf-years').value);
+            if (!name) {
+                showToast('กรุณากรอกชื่อที่แสดง', 'error');
+                return;
+            }
+            b.name = name;
+            b.experienceYears = isNaN(years) || years < 0 ? 0 : years;
+            b.specialtyText = document.getElementById('pf-specialty').value.trim();
+            b.bio = document.getElementById('pf-bio').value.trim();
+            refreshAllBarberViews();
+            showToast('บันทึกข้อมูลโปรไฟล์แล้ว', 'success');
+        }
+
+        function addExperienceHistory() {
+            const place = document.getElementById('pf-hist-place').value.trim();
+            const period = document.getElementById('pf-hist-period').value.trim();
+            const desc = document.getElementById('pf-hist-desc').value.trim();
+            if (!place || !period) {
+                showToast('กรุณากรอกชื่อร้าน/สถาบัน และช่วงเวลา', 'error');
+                return;
+            }
+            myBarber().experienceHistory.push({ place, period, desc });
+            ['pf-hist-place', 'pf-hist-period', 'pf-hist-desc'].forEach(id => document.getElementById(id).value = '');
+            renderBarberPortfolioEditor();
+            showToast('เพิ่มประวัติการทำงานแล้ว', 'success');
+        }
+
+        function deleteExperience(idx) {
+            myBarber().experienceHistory.splice(idx, 1);
+            renderBarberPortfolioEditor();
+            showToast('ลบประวัติแล้ว', 'info');
+        }
+
+        function addEquipment(name) {
+            const b = myBarber();
+            name = (name || '').trim();
+            if (!name) return;
+            if (b.equipment.some(e => e.toLowerCase() === name.toLowerCase())) {
+                showToast('มีอุปกรณ์นี้อยู่แล้ว', 'error');
+                return;
+            }
+            b.equipment.push(name);
+            renderBarberPortfolioEditor();
+            renderCustomerBarbers();
+            renderAdminKYC();
+        }
+
+        function addEquipmentFromInput() {
+            const input = document.getElementById('pf-equip-input');
+            addEquipment(input.value);
+            input.value = '';
+        }
+
+        function removeEquipment(idx) {
+            myBarber().equipment.splice(idx, 1);
+            renderBarberPortfolioEditor();
+            renderCustomerBarbers();
+            renderAdminKYC();
+        }
+
+        async function handlePortfolioUpload(event) {
+            const files = Array.from(event.target.files || []);
+            event.target.value = '';
+            if (!files.length) return;
+
+            const caption = document.getElementById('pf-work-caption').value.trim();
+            const style = document.getElementById('pf-work-style').value;
+            const b = myBarber();
+            let added = 0;
+
+            for (const file of files) {
+                try {
+                    const img = await compressImage(file, 1200);
+                    b.portfolio.unshift({ id: 'p_' + Date.now() + '_' + added, img, caption, style });
+                    added++;
+                } catch (e) { /* skip non-image */ }
+            }
+
+            if (added) {
+                if (!b.specialties.includes(style) && style !== 'Other') b.specialties.push(style);
+                document.getElementById('pf-work-caption').value = '';
+                refreshAllBarberViews();
+                showToast(`เพิ่มภาพผลงาน ${added} รูปแล้ว`, 'success');
+            } else {
+                showToast('ไม่พบไฟล์รูปภาพที่ใช้ได้', 'error');
+            }
+        }
+
+        function deletePortfolio(idx) {
+            if (!confirm('ต้องการลบรูปผลงานนี้ใช่หรือไม่?')) return;
+            myBarber().portfolio.splice(idx, 1);
+            refreshAllBarberViews();
+            showToast('ลบรูปผลงานแล้ว', 'info');
+        }
+
+        // =====================================================================
+        // TRAVEL FEE ENGINE (estimate on booking, confirm on accept)
+        // =====================================================================
+        function calcTravelFee(km) {
+            const t = travelSettings;
+            km = Math.max(0, Math.round((parseFloat(km) || 0) * 10) / 10);
+            const oneWay = Math.round(t.baseFare + Math.max(0, km - t.baseKm) * t.perKm);
+            let fee = oneWay * (t.roundTrip ? 2 : 1);
+            const capped = fee > t.cap;
+            if (capped) fee = t.cap;
+            return { km, oneWay, fee, capped };
+        }
+
+        function travelBreakdownText(r) {
+            const t = travelSettings;
+            return `${r.km} กม. → ฿${t.baseFare} (${t.baseKm} กม.แรก) + ฿${t.perKm}/กม. = ฿${r.oneWay} ต่อเที่ยว` +
+                   `${t.roundTrip ? ' × ไป-กลับ' : ''} = ฿${r.fee}${r.capped ? ' (ถึงเพดานสูงสุด)' : ''}`;
+        }
+
+        function currentTravelEstimate() {
+            return calcTravelFee(document.getElementById('booking-distance-input').value);
+        }
+
+        function haversineKm(lat1, lon1, lat2, lon2) {
+            const R = 6371, toRad = d => d * Math.PI / 180;
+            const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+            return 2 * R * Math.asin(Math.sqrt(a));
+        }
+
+        function useGpsDistance() {
+            const b = currentSelectedBarber;
+            if (!navigator.geolocation || !b || b.lat == null) {
+                showToast('ใช้ GPS ไม่ได้ กรุณากรอกระยะทางเอง', 'error');
+                return;
+            }
+            showToast('กำลังหาตำแหน่งของคุณ...', 'info');
+            navigator.geolocation.getCurrentPosition(pos => {
+                // straight-line distance x1.3 ≈ road distance
+                const km = Math.round(haversineKm(pos.coords.latitude, pos.coords.longitude, b.lat, b.lng) * 1.3 * 10) / 10;
+                document.getElementById('booking-distance-input').value = km;
+                updateCartSummary();
+                showToast(`ระยะทางถนนโดยประมาณ ${km} กม.`, 'success');
+            }, () => showToast('ไม่ได้รับสิทธิ์ตำแหน่ง กรุณากรอกระยะทางเอง', 'error'),
+            { enableHighAccuracy: true, timeout: 10000 });
+        }
+
+        function travelInfoHtml(o, viewer) {
+            if (o.type !== 'home') return '';
+            const confirmed = o.travelStatus === 'confirmed';
+            const methodText = o.travelMethod === 'grab' ? `ตามรูปแคปจาก ${escapeHtml(o.travelApp || 'แอป')}`
+                             : o.travelMethod === 'auto' ? `คำนวณอัตโนมัติ ${o.distanceKm} กม.`
+                             : `ประมาณการ ${o.distanceKm} กม. • รอช่างยืนยัน`;
+            const diff = confirmed && o.paidAmount && o.status !== 'cancelled' ? o.grandTotal - o.paidAmount : 0;
+            return `
+                <div class="bg-slate-900/70 border ${confirmed ? 'border-emerald-500/30' : 'border-amber-500/30'} rounded-xl p-3 text-xs flex items-start justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="text-slate-300"><i class="fa-solid fa-location-dot text-barber-gold mr-1"></i>${escapeHtml(o.address)}</div>
+                        <div class="text-slate-400"><i class="fa-solid fa-route text-barber-gold mr-1"></i>ค่าตัด ฿${o.subtotal} + ค่าเดินทาง <b class="text-white">฿${o.deliveryFee}</b>
+                            <span class="${confirmed ? 'text-emerald-400' : 'text-amber-400'}">(${confirmed ? 'ยืนยันแล้ว • ' : ''}${methodText})</span></div>
+                        ${diff > 0 ? (viewer === 'customer'
+                            ? `<button onclick="settleTravelDiff('${o.id}')" class="mt-1 px-3 py-1.5 rounded-lg bg-barber-gold text-slate-950 font-bold">ชำระส่วนต่างค่าเดินทาง ฿${diff}</button>`
+                            : `<div class="text-amber-400 font-semibold">รอลูกค้าชำระส่วนต่าง ฿${diff}</div>`) : ''}
+                        ${diff < 0 ? `<div class="text-emerald-400 font-semibold">${viewer === 'customer' ? 'ระบบคืนเงินส่วนต่างให้คุณ' : 'ระบบคืนเงินลูกค้า'} ฿${-diff}</div>` : ''}
+                    </div>
+                    ${o.travelProof ? `<img src="${o.travelProof}" onclick="openSingleImage(this.src, 'หลักฐานค่าเดินทาง ${o.id}')" class="w-12 h-16 object-cover rounded-lg border border-slate-700 cursor-pointer shrink-0" title="ดูรูปหลักฐาน">` : ''}
+                </div>`;
+        }
+
+        function settleTravelDiff(orderId) {
+            const o = ordersData.find(x => x.id === orderId);
+            if (!o) return;
+            const diff = o.grandTotal - o.paidAmount;
+            o.paidAmount = o.grandTotal;
+            renderCustomerOrders();
+            renderBarberJobs();
+            showToast(`ชำระส่วนต่าง ฿${diff} เรียบร้อย`, 'success');
+        }
+
+        function openSingleImage(src, caption) {
+            lightboxState = { barberId: null, idx: 0 };
+            const img = document.getElementById('lightbox-img');
+            img.onerror = null;
+            img.src = src;
+            document.getElementById('lightbox-caption').innerText = caption || '';
+            document.getElementById('lightbox-counter').innerText = '';
+            document.getElementById('lightbox').classList.remove('hidden');
+        }
+
+        function acceptOrder(index) {
+            if (ordersData[index].type === 'home') openTravelModal(index);
+            else updateOrderStatus(index, 'accepted', 'ช่างยืนยันรับงานแล้ว');
+        }
+
+        let travelCtx = { index: null, method: 'auto', proof: null };
+
+        function openTravelModal(index) {
+            const o = ordersData[index];
+            travelCtx = { index, method: 'auto', proof: null };
+            document.getElementById('travel-modal-order').innerHTML = `
+                <div><span class="text-barber-gold font-mono font-bold">${o.id}</span> • ${escapeHtml(o.customerName)}</div>
+                <div><i class="fa-solid fa-location-dot mr-1 text-barber-gold"></i>${escapeHtml(o.address)}</div>
+                <div>ลูกค้าจ่ายค่าเดินทางประมาณการไว้ ฿${o.deliveryFee} (${o.distanceKm} กม.)</div>`;
+            document.getElementById('travel-auto-km').value = o.distanceKm || '';
+            document.getElementById('travel-grab-amount').value = '';
+            document.getElementById('travel-app').value = 'Grab';
+            document.getElementById('travel-proof-box').classList.add('hidden');
+            document.getElementById('travel-ocr-status').innerText = '';
+            setTravelMethod('auto');
+            document.getElementById('travel-modal').classList.remove('hidden');
+        }
+
+        function closeTravelModal() {
+            document.getElementById('travel-modal').classList.add('hidden');
+        }
+
+        function setTravelMethod(method) {
+            travelCtx.method = method;
+            ['auto', 'grab'].forEach(m => {
+                document.getElementById(`travel-tab-${m}`).className = m === method
+                    ? 'py-2.5 rounded-xl font-bold bg-barber-gold text-slate-950'
+                    : 'py-2.5 rounded-xl font-bold text-slate-400';
+                document.getElementById(`travel-sec-${m}`).classList.toggle('hidden', m !== method);
+            });
+            updateTravelSummary();
+        }
+
+        function travelFinalFee() {
+            if (travelCtx.method === 'auto') return calcTravelFee(document.getElementById('travel-auto-km').value).fee;
+            return Math.max(0, Math.round(parseFloat(document.getElementById('travel-grab-amount').value) || 0));
+        }
+
+        function updateTravelSummary() {
+            const o = ordersData[travelCtx.index];
+            if (!o) return;
+            const autoR = calcTravelFee(document.getElementById('travel-auto-km').value);
+            document.getElementById('travel-auto-breakdown').innerText = travelBreakdownText(autoR);
+
+            const fee = travelFinalFee();
+            const total = o.subtotal + fee;
+            const diff = total - (o.paidAmount || 0);
+
+            // Screenshot sanity check vs. auto calculation
+            const warn = document.getElementById('travel-grab-warning');
+            const limit = Math.round(autoR.fee * (1 + travelSettings.tolerance / 100));
+            let warnText = '';
+            if (travelCtx.method === 'grab') {
+                if (!travelCtx.proof) warnText = 'กรุณาแนบรูปแคปหน้าจอราคาจากแอปก่อนยืนยัน';
+                else if (fee > limit && autoR.km > 0) warnText = `ยอด ฿${fee} สูงกว่าค่าคำนวณ (฿${autoR.fee}) เกิน ${travelSettings.tolerance}% — ลูกค้าจะเห็นรูปหลักฐานและอาจขอให้แอดมินตรวจสอบ`;
+            }
+            warn.innerText = warnText;
+            warn.classList.toggle('hidden', !warnText);
+
+            document.getElementById('travel-sum-service').innerText = `฿${o.subtotal}`;
+            document.getElementById('travel-sum-fee').innerText = `฿${fee}`;
+            document.getElementById('travel-sum-total').innerText = `฿${total}`;
+            const diffEl = document.getElementById('travel-sum-diff');
+            if (!o.paidAmount) { diffEl.className = 'text-[11px] pt-1 text-slate-400'; diffEl.innerText = 'ลูกค้าชำระเงินสดเมื่อเสร็จงาน'; }
+            else if (diff > 0) { diffEl.className = 'text-[11px] pt-1 text-amber-400'; diffEl.innerText = `ลูกค้าจะได้รับแจ้งให้ชำระส่วนต่างเพิ่ม ฿${diff}`; }
+            else if (diff < 0) { diffEl.className = 'text-[11px] pt-1 text-emerald-400'; diffEl.innerText = `ระบบจะคืนเงินลูกค้า ฿${-diff} อัตโนมัติ`; }
+            else { diffEl.className = 'text-[11px] pt-1 text-slate-400'; diffEl.innerText = 'ตรงกับยอดที่ลูกค้าชำระไว้แล้ว'; }
+
+            const btn = document.getElementById('travel-confirm-btn');
+            const blocked = travelCtx.method === 'grab' && (!travelCtx.proof || fee <= 0);
+            btn.disabled = blocked;
+            btn.classList.toggle('opacity-50', blocked);
+            btn.classList.toggle('cursor-not-allowed', blocked);
+        }
+
+        async function handleTravelProofUpload(event) {
+            const file = event.target.files[0];
+            event.target.value = '';
+            if (!file) return;
+            try {
+                travelCtx.proof = await compressImage(file, 1400, 0.9);
+                document.getElementById('travel-proof-preview').src = travelCtx.proof;
+                document.getElementById('travel-proof-box').classList.remove('hidden');
+                document.getElementById('travel-ocr-status').innerText = 'แนบรูปแล้ว — กดอ่านยอดอัตโนมัติ หรือกรอกยอดเอง';
+                updateTravelSummary();
+            } catch (e) {
+                showToast('ไม่สามารถอ่านไฟล์รูปภาพได้', 'error');
+            }
+        }
+
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                if (window.Tesseract) return resolve();
+                const el = document.createElement('script');
+                el.src = src; el.onload = resolve; el.onerror = reject;
+                document.head.appendChild(el);
+            });
+        }
+
+        // Pick the fare from OCR text: prefer numbers tagged with ฿ / THB / บาท, else the largest plausible amount
+        function extractFare(text) {
+            const clean = text.replace(/,(?=\d{3})/g, '');
+            const tagged = [];
+            const re = /(?:฿|THB|TH8|B)\s*(\d{2,4}(?:\.\d{1,2})?)|(\d{2,4}(?:\.\d{1,2})?)\s*(?:บาท|THB|฿)/gi;
+            let m;
+            while ((m = re.exec(clean))) tagged.push(parseFloat(m[1] || m[2]));
+            const plausible = v => v >= 20 && v <= 5000;
+            const t = tagged.filter(plausible);
+            if (t.length) return Math.round(Math.max(...t));
+            const all = (clean.match(/\b\d{2,4}(?:\.\d{2})?\b/g) || []).map(parseFloat).filter(plausible);
+            return all.length ? Math.round(Math.max(...all)) : null;
+        }
+
+        async function readFareFromProof() {
+            if (!travelCtx.proof) return;
+            const status = document.getElementById('travel-ocr-status');
+            const btn = document.getElementById('travel-ocr-btn');
+            btn.disabled = true;
+            status.className = 'text-[11px] text-slate-400';
+            status.innerText = 'กำลังอ่านตัวเลขจากรูป... (ครั้งแรกอาจใช้เวลาสักครู่)';
+            try {
+                await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+                const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 45000));
+                const { data } = await Promise.race([Tesseract.recognize(travelCtx.proof, 'eng'), timeout]);
+                const amount = extractFare(data.text || '');
+                if (amount) {
+                    document.getElementById('travel-grab-amount').value = amount;
+                    status.className = 'text-[11px] text-emerald-400';
+                    status.innerText = `พบยอด ฿${amount} — ตรวจสอบให้ตรงกับรูปอีกครั้ง (ถ้าเป็นเที่ยวเดียวให้คูณ 2)`;
+                    updateTravelSummary();
+                } else {
+                    status.className = 'text-[11px] text-amber-400';
+                    status.innerText = 'อ่านยอดจากรูปไม่ได้ กรุณากรอกยอดเอง';
+                }
+            } catch (e) {
+                status.className = 'text-[11px] text-amber-400';
+                status.innerText = 'ระบบอ่านรูปอัตโนมัติไม่พร้อมใช้งานตอนนี้ กรุณากรอกยอดเอง';
+            }
+            btn.disabled = false;
+        }
+
+        function confirmTravelAndAccept() {
+            const o = ordersData[travelCtx.index];
+            const fee = travelFinalFee();
+            if (travelCtx.method === 'grab' && (!travelCtx.proof || fee <= 0)) {
+                showToast('กรุณาแนบรูปแคปและกรอกยอดค่าเดินทาง', 'error');
+                return;
+            }
+            o.deliveryFee = fee;
+            o.grandTotal = o.subtotal + fee;
+            o.travelStatus = 'confirmed';
+            o.travelMethod = travelCtx.method;
+            o.travelProof = travelCtx.method === 'grab' ? travelCtx.proof : null;
+            o.travelApp = travelCtx.method === 'grab' ? document.getElementById('travel-app').value : null;
+            if (travelCtx.method === 'auto') o.distanceKm = calcTravelFee(document.getElementById('travel-auto-km').value).km;
+            closeTravelModal();
+            updateOrderStatus(travelCtx.index, 'accepted', `ช่างรับงานแล้ว • ค่าเดินทาง ฿${fee}`);
+        }
+
+        function renderTravelSettings() {
+            const t = travelSettings;
+            document.getElementById('admin-travel-base').value = t.baseFare;
+            document.getElementById('admin-travel-basekm').value = t.baseKm;
+            document.getElementById('admin-travel-perkm').value = t.perKm;
+            document.getElementById('admin-travel-cap').value = t.cap;
+            document.getElementById('admin-travel-tolerance').value = t.tolerance;
+            document.getElementById('admin-travel-roundtrip').checked = t.roundTrip;
+            document.getElementById('admin-travel-example').innerText = 'ตัวอย่าง: ' + travelBreakdownText(calcTravelFee(5));
+        }
+
+        function saveTravelSettings() {
+            const num = (id, min = 0) => Math.max(min, parseFloat(document.getElementById(id).value) || 0);
+            travelSettings = {
+                baseFare: num('admin-travel-base'),
+                baseKm: num('admin-travel-basekm'),
+                perKm: num('admin-travel-perkm'),
+                cap: num('admin-travel-cap', 1),
+                tolerance: num('admin-travel-tolerance'),
+                roundTrip: document.getElementById('admin-travel-roundtrip').checked
+            };
+            renderTravelSettings();
+            updateCartSummary();
+            showToast('บันทึกอัตราค่าเดินทางแล้ว', 'success');
+        }
+
+        // =====================================================================
+        // CANCELLATION POLICY
+        // =====================================================================
+        function orderStartsAt(o) {
+            const m = (o.time || '').match(/(\d{1,2}):(\d{2})/);
+            const hh = m ? m[1].padStart(2, '0') : '00', mm = m ? m[2] : '00';
+            return new Date(`${o.date}T${hh}:${mm}:00+07:00`); // Bangkok time
+        }
+
+        function cancelPolicyText(isHome) {
+            const c = cancelSettings;
+            return `<i class="fa-solid fa-circle-info mr-1"></i>นโยบายยกเลิก: ยกเลิกก่อนช่างรับงาน หรือก่อนเวลานัดเกิน ${c.windowHours} ชม. คืนเงินเต็มจำนวน • ` +
+                   `ยกเลิกกะทันหัน (เหลือไม่ถึง ${c.windowHours} ชม.) หัก${isHome ? 'ค่าเดินทาง + ' : ''}ค่ายกเลิก ${c.feePct}% ของค่าบริการ ให้ช่าง`;
+        }
+
+        function cancellationQuote(o) {
+            const hoursLeft = (orderStartsAt(o) - new Date()) / 3600000;
+            const late = o.status === 'accepted' && hoursLeft < cancelSettings.windowHours;
+            const travelCharge = late && o.type === 'home' && o.travelStatus === 'confirmed' ? o.deliveryFee : 0;
+            const fee = late ? Math.round(o.subtotal * cancelSettings.feePct / 100) : 0;
+            const charge = travelCharge + fee;
+            const paid = o.paidAmount || 0;
+            return { late, hoursLeft, travelCharge, fee, charge, refund: Math.max(0, paid - charge), owed: Math.max(0, charge - paid) };
+        }
+
+        function fmtHoursLeft(h) {
+            if (h <= 0) return 'เลยเวลานัดแล้ว';
+            if (h < 1) return `อีก ${Math.max(1, Math.round(h * 60))} นาที`;
+            return `อีก ${Math.floor(h)} ชม. ${Math.round((h % 1) * 60)} นาที`;
+        }
+
+        function cancelInfoHtml(o, viewer) {
+            if (o.status === 'cancelled' && o.cancel) {
+                const c = o.cancel;
+                const rows = c.charge > 0 ? `
+                    ${c.travelCharge ? `<div class="flex justify-between"><span>ค่าเดินทางช่าง</span><span>฿${c.travelCharge}</span></div>` : ''}
+                    <div class="flex justify-between"><span>ค่ายกเลิก ${c.feePct}%</span><span>฿${c.fee}</span></div>
+                    <div class="flex justify-between font-bold text-white border-t border-slate-800 pt-1"><span>${viewer === 'barber' ? 'คุณได้รับ' : 'รวมหัก'}</span><span>฿${c.charge}</span></div>
+                    ${viewer === 'customer' && c.refund ? `<div class="flex justify-between text-emerald-400 font-bold"><span>คืนเงินให้คุณ</span><span>฿${c.refund}</span></div>` : ''}
+                    ${viewer === 'customer' && c.owed ? `<div class="flex justify-between text-amber-400 font-bold"><span>ค้างชำระ</span><span>฿${c.owed}</span></div>` : ''}`
+                  : `<div>${viewer === 'customer' ? `ยกเลิกล่วงหน้า — คืนเงินเต็มจำนวน ฿${c.refund}` : 'ยกเลิกล่วงหน้า ไม่มีค่าชดเชย'}</div>`;
+                return `<div class="bg-rose-500/5 border border-rose-500/30 rounded-xl p-3 text-xs text-slate-300 space-y-1">
+                    <div class="text-rose-400 font-bold"><i class="fa-solid fa-ban mr-1"></i>${c.late ? 'ยกเลิกกะทันหัน' : 'ยกเลิกแล้ว'} • ${new Date(c.at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })}</div>
+                    ${rows}
+                </div>`;
+            }
+            if (viewer !== 'customer' || !['pending', 'accepted'].includes(o.status)) return '';
+            const q = cancellationQuote(o);
+            return `<div class="flex items-center justify-between gap-3 text-xs">
+                <span class="${q.late ? 'text-amber-400' : 'text-slate-500'}">
+                    ${q.late ? `<i class="fa-solid fa-triangle-exclamation mr-1"></i>ถึงเวลานัด${fmtHoursLeft(q.hoursLeft)} — ยกเลิกตอนนี้มีค่าใช้จ่าย ฿${q.charge}` : 'ยกเลิกตอนนี้ได้รับเงินคืนเต็มจำนวน'}
+                </span>
+                <button onclick="openCancelModal('${o.id}')" class="shrink-0 px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 hover:border-rose-500 text-rose-400 font-bold">
+                    <i class="fa-solid fa-ban mr-1"></i> ยกเลิกคิว
+                </button>
+            </div>`;
+        }
+
+        let cancelCtxId = null;
+
+        function openCancelModal(orderId) {
+            const o = ordersData.find(x => x.id === orderId);
+            if (!o) return;
+            cancelCtxId = orderId;
+            const q = cancellationQuote(o);
+            document.getElementById('cancel-modal-content').innerHTML = `
+                <div class="text-slate-300"><span class="font-mono text-barber-gold font-bold">${o.id}</span> • ${escapeHtml(o.barberName)}<br>นัด ${o.date} (${o.time}) — ${fmtHoursLeft(q.hoursLeft)}</div>
+                ${q.late ? `
+                    <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-amber-300">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i>ช่างรับงานแล้วและเหลือเวลาไม่ถึง ${cancelSettings.windowHours} ชม. จึงเป็นการยกเลิกกะทันหัน
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-1 text-slate-300">
+                        ${q.travelCharge ? `<div class="flex justify-between"><span>ค่าเดินทางที่ช่างยืนยันไว้</span><span>฿${q.travelCharge}</span></div>` : ''}
+                        <div class="flex justify-between"><span>ค่ายกเลิก ${cancelSettings.feePct}% ของค่าบริการ ฿${o.subtotal}</span><span>฿${q.fee}</span></div>
+                        <div class="flex justify-between font-bold text-white border-t border-slate-800 pt-1"><span>หักจ่ายให้ช่าง</span><span>฿${q.charge}</span></div>
+                        ${q.refund ? `<div class="flex justify-between text-emerald-400 font-bold"><span>คืนเงินให้คุณ</span><span>฿${q.refund}</span></div>` : ''}
+                        ${q.owed ? `<div class="flex justify-between text-amber-400 font-bold"><span>ต้องชำระเพิ่ม</span><span>฿${q.owed}</span></div>` : ''}
+                    </div>` : `
+                    <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 text-emerald-300">
+                        <i class="fa-solid fa-circle-check mr-1"></i>ไม่มีค่าใช้จ่าย ${o.paidAmount ? `คืนเงินเต็มจำนวน ฿${o.paidAmount}` : ''}
+                    </div>`}
+                ${o.pointsEarned ? `<div class="text-slate-500">แต้มที่ได้จากคิวนี้ (${o.pointsEarned} แต้ม) จะถูกหักคืน</div>` : ''}`;
+            document.getElementById('cancel-modal').classList.remove('hidden');
+        }
+
+        function closeCancelModal() {
+            document.getElementById('cancel-modal').classList.add('hidden');
+        }
+
+        function confirmCancelOrder() {
+            const o = ordersData.find(x => x.id === cancelCtxId);
+            if (!o || !['pending', 'accepted'].includes(o.status)) return closeCancelModal();
+            const q = cancellationQuote(o);
+            o.cancel = { at: Date.now(), late: q.late, travelCharge: q.travelCharge, fee: q.fee, feePct: cancelSettings.feePct,
+                         charge: q.charge, refund: q.refund, owed: q.owed };
+            o.status = 'cancelled';
+            o.statusText = q.late ? 'ยกเลิกกะทันหัน' : 'ยกเลิกแล้ว';
+            if (o.pointsEarned) {
+                currentUser.points = Math.max(0, currentUser.points - o.pointsEarned);
+                document.getElementById('user-points-display').innerText = `${currentUser.points} แต้ม`;
+            }
+            closeCancelModal();
+            renderCustomerOrders();
+            renderBarberJobs();
+            showToast(q.late ? `ยกเลิกแล้ว • หัก ฿${q.charge} ให้ช่าง${q.refund ? ` • คืนเงิน ฿${q.refund}` : ''}` : 'ยกเลิกแล้ว • คืนเงินเต็มจำนวน', q.late ? 'info' : 'success');
+        }
+
+        function renderCancelSettings() {
+            document.getElementById('admin-cancel-window').value = cancelSettings.windowHours;
+            document.getElementById('admin-cancel-pct').value = cancelSettings.feePct;
+        }
+
+        function saveCancelSettings() {
+            const w = parseFloat(document.getElementById('admin-cancel-window').value);
+            const pct = parseFloat(document.getElementById('admin-cancel-pct').value);
+            if (isNaN(w) || w < 0 || isNaN(pct) || pct < 0 || pct > 100) {
+                showToast('กรุณากรอกค่าให้ถูกต้อง', 'error');
+                return;
+            }
+            cancelSettings = { windowHours: w, feePct: pct };
+            renderCustomerOrders();
+            updateCartSummary();
+            showToast('บันทึกนโยบายยกเลิกแล้ว', 'success');
+        }
+
+        // =====================================================================
+        // BARBER SERVICES MANAGER
+        // =====================================================================
+        function renderBarberServicesManager() {
+            const list = document.getElementById('barber-services-manager-list');
+            const barber = barbersData[0]; // Example current barber
+
+            list.innerHTML = barber.services.map((s, idx) => `
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center justify-between text-xs">
+                    <div>
+                        <span class="font-bold text-white block">${escapeHtml(s.name)}</span>
+                        <span class="text-slate-400">${s.duration}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-extrabold text-barber-gold text-sm">฿${s.price}</span>
+                        <button onclick="deleteBarberService(${idx})" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addCustomBarberService() {
+            const name = document.getElementById('new-service-name').value;
+            const price = parseInt(document.getElementById('new-service-price').value);
+
+            if (!name || isNaN(price)) {
+                showToast('กรุณากรอกชื่อบริการและราคาให้ครบถ้วน', 'error');
+                return;
+            }
+
+            barbersData[0].services.push({
+                id: 's_custom_' + Date.now(),
+                name: name,
+                price: price,
+                duration: '40 นาที'
+            });
+
+            document.getElementById('new-service-name').value = '';
+            document.getElementById('new-service-price').value = '';
+
+            renderBarberServicesManager();
+            showToast('เพิ่มรายการบริการใหม่แล้ว', 'success');
+        }
+
+        function deleteBarberService(idx) {
+            barbersData[0].services.splice(idx, 1);
+            renderBarberServicesManager();
+            showToast('ลบบริการเรียบร้อยแล้ว', 'info');
+        }
+
+        function submitKYCForm() {
+            showToast('ส่งเอกสาร KYC เรียบร้อย! กรุณารอแอดมินตรวจสอบ', 'success');
+        }
+
+        // =====================================================================
+        // ADMIN DASHBOARD LOGIC
+        // =====================================================================
+        function renderAdminKYC() {
+            const list = document.getElementById('admin-kyc-list');
+            document.getElementById('admin-barbers-count-stat').innerText = `${barbersData.length} ท่าน`;
+
+            list.innerHTML = barbersData.map((b, idx) => `
+                <div class="bg-barber-card border border-slate-800 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl text-xs">
+                    <div class="flex items-center space-x-3">
+                        <img src="${b.avatar}" onerror="this.src='${IMG_FALLBACK}'" class="w-12 h-12 rounded-xl object-cover border border-slate-700">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 class="font-bold text-white text-sm">${escapeHtml(b.name)}</h4>
+                                <span class="text-slate-400">(${escapeHtml(b.shopName)})</span>
+                            </div>
+                            <p class="text-slate-400 text-[11px]">${escapeHtml(b.locationText)}</p>
+                            <p class="text-slate-500 text-[11px]">ประสบการณ์ ${b.experienceYears || 0} ปี • ผลงาน ${b.portfolio.length} รูป • อุปกรณ์ ${b.equipment.length} รายการ</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 flex-wrap justify-center">
+                        <button onclick="openPortfolioModal('${b.id}')" class="px-3 py-1.5 bg-slate-800 border border-slate-700 hover:border-barber-gold text-white font-semibold rounded-xl">
+                            <i class="fa-solid fa-images mr-1 text-barber-gold"></i> ดูโปรไฟล์
+                        </button>
+                        <span class="px-2.5 py-1 rounded-full font-bold text-[10px] ${b.kycStatus === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'}">
+                            ${b.kycStatus === 'approved' ? 'อนุมัติแล้ว' : 'รอตรวจสอบ KYC'}
+                        </span>
+
+                        ${b.kycStatus === 'pending' ? `
+                            <button onclick="approveBarberKYC(${idx})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow">
+                                <i class="fa-solid fa-check mr-1"></i> กดยืนยันอนุมัติ
+                            </button>
+                        ` : `
+                            <button onclick="rejectBarberKYC(${idx})" class="px-3 py-1.5 bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-400 font-bold rounded-xl border border-slate-700">
+                                ระงับชั่วคราว
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function approveBarberKYC(idx) {
+            barbersData[idx].kycStatus = 'approved';
+            renderAdminKYC();
+            renderCustomerBarbers();
+            showToast(`อนุมัติเอกสาร KYC สำหรับ ${barbersData[idx].name} เรียบร้อย`, 'success');
+        }
+
+        function rejectBarberKYC(idx) {
+            barbersData[idx].kycStatus = 'pending';
+            renderAdminKYC();
+            renderCustomerBarbers();
+            showToast(`ระงับสถานะชั่วคราวสำหรับ ${barbersData[idx].name}`, 'info');
+        }
+
+        function saveAdminCommission() {
+            const val = parseInt(document.getElementById('admin-commission-rate').value);
+            if (!isNaN(val)) {
+                platformCommissionRate = val;
+                showToast(`อัปเดตอัตราคอมมิชชันเป็น ${val}% แล้ว`, 'success');
+            }
+        }
+
+        // =====================================================================
+        // AUTH MODAL ENGINE
+        // =====================================================================
+        let authSelectedRole = 'customer';
+
+        function openAuthModal() {
+            document.getElementById('auth-modal').classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('hidden');
+        }
+
+        function setAuthRole(role) {
+            authSelectedRole = role;
+            const btnCust = document.getElementById('auth-role-customer');
+            const btnBarb = document.getElementById('auth-role-barber');
+            const extraFields = document.getElementById('auth-barber-extra-fields');
+
+            if (role === 'customer') {
+                btnCust.className = "py-2 rounded-xl text-xs font-bold bg-barber-gold text-slate-950";
+                btnBarb.className = "py-2 rounded-xl text-xs font-bold text-slate-400";
+                extraFields.classList.add('hidden');
+            } else {
+                btnBarb.className = "py-2 rounded-xl text-xs font-bold bg-barber-gold text-slate-950";
+                btnCust.className = "py-2 rounded-xl text-xs font-bold text-slate-400";
+                extraFields.classList.remove('hidden');
+            }
+        }
+
+        function handleAuthSubmit(event) {
+            event.preventDefault();
+            closeAuthModal();
+            showToast('ลงทะเบียน / เข้าสู่ระบบสำเร็จ!', 'success');
+            switchRole(authSelectedRole);
+        }
+
+        // =====================================================================
+        // UTILITY TOAST NOTIFICATIONS
+        // =====================================================================
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-6 right-6 z-[80] px-5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-2.5 transition-all animate-bounce ${
+                type === 'success' ? 'bg-emerald-600 text-white border border-emerald-400/30' : 
+                type === 'error' ? 'bg-rose-600 text-white border border-rose-400/30' : 'bg-slate-800 text-white border border-slate-700'
+            }`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'} text-base"></i> ${escapeHtml(message)}`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
+        }
+    </script>
+</body>
+</html>
